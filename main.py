@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from google import genai
+from google.genai import errors
 
 # Load environment variables at module level
 load_dotenv()
@@ -25,10 +26,13 @@ def get_gemini_response(prompt: str) -> str:
         raise ValueError("GEMINI_API_KEY not found in environment variables.")
 
     client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+    except (errors.APIError, errors.ClientError, errors.ServerError) as e:
+        raise RuntimeError(f"Error calling Gemini API: {e}")
 
     # FIX: guard against None response.text (was previously unhandled)
     if not response or not response.text:
