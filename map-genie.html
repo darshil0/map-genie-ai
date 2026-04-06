@@ -735,7 +735,12 @@ function setLoading(on) {
 // ── Geocode location → get coordinates ───────────────────────────────────
 async function geocode(locationName) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=json&limit=1`;
-  const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+  const res  = await fetch(url, {
+    headers: {
+      'Accept-Language': 'en',
+      'User-Agent': 'Map-Genie/1.0 (https://github.com/your-username/map-genie)'
+    }
+  });
   const data = await res.json();
   if (!data.length) return null;
   return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
@@ -772,9 +777,11 @@ Do not include coordinates — those will be geocoded separately.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-3-5-sonnet-latest",
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: query }],

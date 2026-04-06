@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-04-06
+
+### Added
+- Specific error handling for Gemini API calls in `main.py` using `google.genai.errors`.
+- `User-Agent` header to Nominatim fetch requests in `map-genie.html` to comply with usage policies.
+
+### Changed
+- Updated all Python dependencies in `requirements.txt` to their latest stable versions:
+    - `google-genai` to `1.70.0`
+    - `python-dotenv` to `1.2.2`
+    - `pytest` to `9.0.2`
+- Updated Claude model in `map-genie.html` from `claude-sonnet-4-20250514` to `claude-3-5-sonnet-latest`.
+
 ## [0.2.0] - 2026-04-06
 
 ### Added
