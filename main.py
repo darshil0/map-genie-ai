@@ -89,8 +89,11 @@ def explore_endpoint(req: ExploreRequest):
             if not response.text:
                  raise RuntimeError("Empty response received.")
                  
+            # Strip markdown block occasionally appended by LLMs
+            raw_json = response.text.replace("```json", "").replace("```", "").strip()
+            
             # Note: With response_schema, Gemini returns a literal JSON object string
-            return ExploreResponse.model_validate_json(response.text)
+            return ExploreResponse.model_validate_json(raw_json)
             
         except (errors.APIError, Exception) as e:
             if attempt == max_retries - 1:

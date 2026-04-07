@@ -513,7 +513,10 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="search-panel">
-      <div class="search-label">Explore a Location</div>
+      <div class="search-label" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Explore a Location</span>
+        <button id="resetBtn" style="background:transparent; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; display:none; padding:4px;">Clear</button>
+      </div>
       <div class="input-row">
         <input
           type="text"
@@ -592,6 +595,28 @@ const voiceBtn     = document.getElementById('voiceBtn');
 const voiceStatus  = document.getElementById('voiceStatus');
 const resultsPanel = document.getElementById('resultsPanel');
 const queryChip    = document.getElementById('queryChip');
+const resetBtn     = document.getElementById('resetBtn');
+
+// ── Clear Chat / Reset UI ────────────────────────────────────────────────
+resetBtn.addEventListener('click', () => {
+  chatHistory = [];
+  clearMarkers();
+  resultsPanel.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🗺️</div>
+      <h3>Start Exploring</h3>
+      <p>Type a location or tap the mic to explore places nearby.</p>
+    </div>`;
+  queryChip.style.display = 'none';
+  resetBtn.style.display  = 'none';
+  searchInput.value       = '';
+  showToast('Chat history cleared. Map reset.', '🧹');
+  if (userLocation) {
+    map.flyTo([userLocation.lat, userLocation.lng], 13);
+  } else {
+    map.flyTo([20, 0], 2);
+  }
+});
 
 // ── Category → emoji mapping ──────────────────────────────────────────────
 const CATEGORY_ICONS = {
@@ -794,6 +819,7 @@ async function geocode(locationName) {
 // ── API: call FastAPI backend ─────────────────────────────
 async function searchWithClaude(query) {
   setLoading(true);
+  resetBtn.style.display = 'block';
   chatHistory.push({ role: 'user', content: query });
   
   try {
