@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-04-06
+
+### Fixed
+- `map-genie.html` & `README.md`: Corrected the invalid Anthropic model string from `claude-sonnet-4-5` to `claude-3-5-sonnet-20241022` to ensure successful API requests.
+- `main.py`: Updated Gemini API exception handler to only catch `errors.APIError`. Removed `errors.ClientError` and `errors.ServerError` to prevent runtime `AttributeError`s since they do not exist in the 0.1+ `google.genai` SDK.
+
 ## [0.4.0] - 2026-04-06
 
 ### Fixed
