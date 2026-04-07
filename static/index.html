@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<<<<<<< HEAD
 <style>
   :root {
     --bg:        #0b0f1a;
@@ -540,20 +541,34 @@
     }
   }
 </style>
+=======
+<link rel="stylesheet" href="/static/style.css"/>
+>>>>>>> 8925af3 (UI: Overhaul aesthetic to premium glassmorphism architecture)
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    Map-Genie
-  </div>
-  <span class="header-tagline">AI-Powered Place Explorer</span>
-</header>
-
 <div class="workspace">
+<<<<<<< HEAD
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
+=======
+  <!-- Map (Now full screen background) -->
+  <div class="map-wrapper">
+    <div class="query-chip" id="queryChip"></div>
+    <div id="map"></div>
+  </div>
+
+  <!-- Floating Glass Sidebar -->
+  <aside class="sidebar">
+    <header>
+      <div class="logo">
+        <div class="logo-dot"></div>
+        Map-Genie
+      </div>
+      <span class="header-tagline">AI-Powered Travel Sidekick</span>
+    </header>
+
+>>>>>>> 8925af3 (UI: Overhaul aesthetic to premium glassmorphism architecture)
     <div class="search-panel">
       <div class="search-label">
         <span>Explore a Location</span>
@@ -591,12 +606,6 @@
       </div>
     </div>
   </aside>
-
-  <!-- Map -->
-  <div class="map-wrapper">
-    <div class="query-chip" id="queryChip"></div>
-    <div id="map"></div>
-  </div>
 </div>
 
 <script>
@@ -694,12 +703,12 @@ const COLORS = ['#3bf5c3','#6c8bff','#ff5f7e','#ffcf6b','#a78bff','#5ff0ff'];
 function createMarkerIcon(emoji, colorIndex) {
   const bg = COLORS[colorIndex % COLORS.length];
   return L.divIcon({
-    className: 'custom-marker-container',
+    className: 'custom-icon',
     iconSize:  [36, 36],
     iconAnchor:[18, 36],
-    popupAnchor:[0, -38],
-    html: `<div class="custom-marker" style="background:${bg}20;border-color:${bg}">
-             <span class="inner">${emoji}</span>
+    popupAnchor:[0, -36],
+    html: `<div class="custom-marker-droplet" style="background:${bg}20;border-color:${bg}">
+             <div class="inner">${emoji}</div>
            </div>`,
   });
 }
@@ -744,7 +753,8 @@ function renderPlaces(places, query) {
 
     // Card
     const card = document.createElement('div');
-    card.className = 'place-card';
+    card.className = `place-card`;
+    card.style.animationDelay = `${i * 0.08}s`; /* Staggered CSS pop-in */
     card.dataset.index = i;
     card.innerHTML = `
       <div class="card-top">
