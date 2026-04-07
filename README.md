@@ -1,6 +1,6 @@
 # Map-Genie 🗺️
 
-An AI-powered place explorer that highlights locations on an interactive map, accepts both **voice and text input**, and surfaces a curated list of nearby places to visit — all in a single HTML file.
+An AI-powered place explorer that highlights locations on an interactive map, accepts both **voice and text input**, and surfaces a curated list of nearby places to visit. Powered by a robust FastAPI backend.
 
 ---
 
@@ -8,7 +8,7 @@ An AI-powered place explorer that highlights locations on an interactive map, ac
 
 - **Text search** — type any query like *"coffee shops in Amsterdam"* or *"temples near Kyoto"*
 - **Voice search** — tap the mic button and speak your query; live transcription fills the search box automatically
-- **AI-generated place list** — Claude interprets your query, identifies the best-known places, and renders them as cards in the sidebar
+- **AI-generated place list** — Gemini interprets your query, identifies the best-known places, and renders them as cards in the sidebar
 - **Interactive map** — custom emoji markers are placed on a dark CartoDB map; clicking a card flies the camera to that place; clicking a marker highlights its card
 - **Rich place cards** — each card shows name, category, a short description, distance estimate, and topic tags
 - **Self-Healing Architecture** — Both the frontend and backend utilize robust networking with exponential backoff on API calls, dynamic fallback rendering options on connection drops, and automatic JSON repair heuristics so simple glitches never break your map.
@@ -57,9 +57,9 @@ pytest
 
 All three test cases should pass:
 
-- `test_get_gemini_response` — happy path with mocked API response
-- `test_get_gemini_response_no_api_key` — missing key raises `ValueError`
-- `test_get_gemini_response_empty_text` — empty response raises `RuntimeError`
+- `test_explore_endpoint_success` — happy path testing structured Gemini JSON output and 200 OK wrapper
+- `test_explore_endpoint_no_messages` — empty chat history correctly rejects with 400 Bad Request
+- `test_explore_endpoint_empty_response` — handles falsy API breaks via 503 Service Unavailable
 
 ---
 
@@ -101,8 +101,7 @@ map-genie/
   return no geocoding result. Adding a short delay between searches or self-hosting
   a Nominatim instance resolves this.
 - **Voice search requires microphone permission.** Browsers prompt for permission on
-  first use. HTTPS is required for the Web Speech API in Chrome and Edge; opening
-  the file via `file://` may be blocked.
+  first use. HTTPS or `localhost` is strictly required for the Web Speech API in Chrome and Edge.
 
 ---
 
