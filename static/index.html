@@ -572,6 +572,18 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 // ── State ─────────────────────────────────────────────────────────────────
 let markers = [];
 let activeCard = null;
+let chatHistory = [];
+let userLocation = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      map.flyTo([userLocation.lat, userLocation.lng], 13);
+      showToast('Detected your location!', '📍');
+    }, err => console.log('Geolocation disabled.'));
+  }
+});
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const searchInput  = document.getElementById('searchInput');
@@ -706,6 +718,21 @@ function renderPlaces(places, query) {
       card.classList.add('active');
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
+
+    // LAZY GEOCODING: Overwrite dummy coordinate with real coordinate slowly
+    setTimeout(async () => {
+      // Don't geocode default placeholder strings easily
+      if (!place.name.toLowerCase().includes("fallback")) {
+        const strictQuery = place.name + ", " + query;
+        const realGeo = await geocode(strictQuery);
+        if (realGeo) {
+           marker.setLatLng(new L.LatLng(realGeo.lat, realGeo.lng));
+           bounds.push([realGeo.lat, realGeo.lng]);
+           // Re-fit maps if active so they pan over beautifully
+           map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+        }
+      }
+    }, 1500 * (i + 1));
   });
 
   // Fit map to all markers
@@ -764,108 +791,52 @@ async function geocode(locationName) {
   return { lat: 20, lng: 0, display: "Fallback Context" };
 }
 
-// ── Claude API: parse query + generate places ─────────────────────────────
+// ── API: call FastAPI backend ─────────────────────────────
 async function searchWithClaude(query) {
   setLoading(true);
+  chatHistory.push({ role: 'user', content: query });
+  
   try {
-    const systemPrompt = `You are Map-Genie, an AI travel assistant.
-Given a user's query, you must:
-1. Extract the target location (city, neighborhood, region, or coordinates).
-2. Extract the type of places they want (restaurants, museums, parks, etc.).
-3. Generate a JSON array of 8 realistic, well-known places of that type near that location.
-
-Respond ONLY with a JSON object — no markdown, no extra text — in this exact shape:
-{
-  "location": "canonical location name for geocoding",
-  "category": "category label",
-  "places": [
-    {
-      "name": "Place Name",
-      "type": "specific type (e.g. Ramen Restaurant, Art Museum)",
-      "description": "1–2 sentence description of this specific place.",
-      "tags": ["tag1", "tag2"],
-      "distance": "0.3 km"
-    }
-  ]
-}
-
-Use real, well-known places wherever possible. Vary the distance field between 0.1 km and 5 km.
-Do not include coordinates — those will be geocoded separately.`;
-
-    // FIX: Added required anthropic-version header.
-    // FIX: Added anthropic-dangerous-direct-browser-access header required for
-    //      direct browser-to-API calls (bypasses the CORS preflight rejection).
     let response = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        response = await fetch("https://api.anthropic.com/v1/messages", {
+        response = await fetch("/api/explore", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-direct-browser-access": "true"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-3-5-sonnet-20241022",
-            max_tokens: 1000,
-            system: systemPrompt,
-            messages: [{ role: "user", content: query }],
+            messages: chatHistory,
+            location_context: userLocation
           }),
         });
-
         if (response.ok || (response.status !== 429 && response.status < 500)) break;
       } catch (e) {
-        console.warn(`Network error on attempt ${attempt + 1}`, e);
         if (attempt === 2) throw e;
       }
-      
       showToast('Retrying API connection...', '⏳');
       await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
     }
 
-    // FIX: Check HTTP status before attempting to parse the response body.
-    //      Previously, a 401 / 429 / 500 response would silently crash at
-    //      JSON.parse with a confusing "Unexpected token" error instead of
-    //      surfacing the actual API error message.
     if (!response.ok) {
       const errBody = await response.json().catch(() => ({}));
-      const errMsg  = errBody?.error?.message || `HTTP ${response.status}`;
-      throw new Error(`Anthropic API error: ${errMsg}`);
+      throw new Error(errBody.detail || `HTTP ${response.status}`);
     }
 
     const data = await response.json();
-    const raw  = data.content?.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+    
+    // Save AI response to history so refinement works
+    chatHistory.push({ role: 'model', content: "Generated places successfully."});
 
-    if (!raw) {
-      throw new Error('Empty response from Claude API.');
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (parseError) {
-      console.warn("Standard JSON parse failed, attempting regex recovery extraction...", parseError);
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) {
-        parsed = JSON.parse(match[0]);
-      } else {
-        throw new Error('Claude response contained unrecoverable invalid JSON.');
-      }
-    }
-
-    // Geocode the location
-    const geo = await geocode(parsed.location);
+    // Geocode the general location 
+    const geo = await geocode(data.location || query);
     if (!geo) {
-      showToast('Could not find that location on the map.', '⚠️');
+      showToast('Could not geocode main location.', '⚠️');
       setLoading(false);
       return;
     }
 
-    // Assign realistic coordinates by scattering points around the geocoded center.
-    // FIX: Scatter is applied here only; renderPlaces no longer adds a second
-    //      layer of jitter so marker positions are deterministic per search.
-    const places = parsed.places.map((p, i) => {
-      const angle  = (i / parsed.places.length) * 2 * Math.PI;
+    // Assign realistic coordinates by scattering points around the geocoded center initially
+    const places = data.places.map((p, i) => {
+      const angle  = (i / data.places.length) * 2 * Math.PI;
       const radius = 0.002 + Math.random() * 0.012; // ~200 m – 1.3 km spread
       return {
         ...p,
@@ -874,7 +845,7 @@ Do not include coordinates — those will be geocoded separately.`;
       };
     });
 
-    renderPlaces(places, query);
+    renderPlaces(places, data.location || query);
   } catch (err) {
     console.error(err);
     resultsPanel.innerHTML = `
@@ -883,7 +854,8 @@ Do not include coordinates — those will be geocoded separately.`;
         <h3>Something went wrong</h3>
         <p>${err.message}</p>
       </div>`;
-    showToast('Search failed. Check your API connection.', '❌');
+    chatHistory.pop(); // Remove failed user message
+    showToast('Search failed.', '❌');
   } finally {
     setLoading(false);
   }
