@@ -22,33 +22,30 @@ An AI-powered place explorer that highlights locations on an interactive map, ac
 | Map rendering | [Leaflet.js](https://leafletjs.com/) 1.9.4 |
 | Map tiles | [CartoDB Dark Matter](https://carto.com/basemaps/) (OpenStreetMap data) |
 | Geocoding | [Nominatim](https://nominatim.org/) (OpenStreetMap) |
-| AI / place generation | [Anthropic Claude](https://docs.anthropic.com/) (`claude-3-5-sonnet-20241022`) |
+| AI / place generation | [Google Gemini](https://ai.google.dev/) (`gemini-2.0-flash`) via backend |
 | Voice input | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
 | Typography | [Syne](https://fonts.google.com/specimen/Syne) + [DM Sans](https://fonts.google.com/specimen/DM+Sans) (Google Fonts) |
-| Python backend (optional) | [google-genai](https://pypi.org/project/google-genai/) + [python-dotenv](https://pypi.org/project/python-dotenv/) |
+| Python backend | [FastAPI](https://fastapi.tiangolo.com/), [google-genai](https://pypi.org/project/google-genai/) + [python-dotenv](https://pypi.org/project/python-dotenv/) |
 | Testing | [pytest](https://docs.pytest.org/) |
 
 ---
 
 ## Quick Start
 
-### 1 — Map-Genie web app (no server required)
-
-Just open `map-genie.html` in any modern browser.
-
-The app calls the Anthropic API directly from the browser using `claude-3-5-sonnet-20241022`.
-
-> **Note on API key:** The Anthropic API key is handled automatically by the
-> claude.ai artifact runtime. If you run this file outside claude.ai, add your
-> key as an `x-api-key` header inside the `fetch` call in `map-genie.html`.
-
-### 2 — Python backend (optional, for Gemini API experiments)
+### 1 — API Key Configuration
 
 ```bash
-pip3 install -r requirements.txt
-cp .env.example .env          # add your GEMINI_API_KEY
-python3 main.py
+cp .env.example .env          # insert your GEMINI_API_KEY
 ```
+
+### 2 — Run the App
+
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Navigate to `http://127.0.0.1:8000` gently in your web browser!
 
 ---
 
@@ -83,8 +80,9 @@ in all browsers.
 
 ```
 map-genie/
-├── map-genie.html      # Main web app (standalone, no build step)
-├── main.py             # Python / Gemini API starter
+├── main.py             # FastAPI backend & Gemini integrations
+├── static/
+│   └── index.html      # Main web app 
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # API key template
 ├── tests/
@@ -97,11 +95,7 @@ map-genie/
 
 ## Known Limitations
 
-- **Marker positions are approximated.** The Claude API returns place names without
-  coordinates. Coordinates are derived by scattering points radially around the
-  geocoded city/neighborhood center, not from a places database. For well-known
-  landmarks the positions are visually reasonable; for niche locations they may be
-  slightly off.
+- **Lazy Geocoding fallback.** Rather than blocking operations for 8-seconds upfront while Nominatim rate-limits sequentially, the map immediately spins up radial placeholder points, which are automatically corrected and snapped to proper streets asynchronously one-by-one.
 - **Nominatim rate limits.** The geocoding step calls the public Nominatim endpoint,
   which enforces a 1 request/second limit. Back-to-back searches may occasionally
   return no geocoding result. Adding a short delay between searches or self-hosting

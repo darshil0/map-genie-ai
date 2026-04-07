@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-06
+
+### Changed
+- **Architectural Shift to Full-Stack**: Map-Genie's standalone browser iteration has been entirely migrated into a Full-Stack application powered by Python `FastAPI` and the Gemini API, bypassing CORS issues and ensuring secure backend LLM inferences.
+- `map-genie.html`: Moved into a `static/` directory and refactored from calling Anthropic manually to leveraging the local `/api/explore` proxy endpoint.
+- `main.py`: Fully replaced with a `uvicorn` and `fastapi` stack serving a secure endpoint that generates robust mapping variables through Gemini.
+- **Lazy Geocoding**: Upgraded `index.html` to leverage an asynchronous auto-snapping Nominatim strategy. Dummy points are instantly scattered radially, while background requests geocode and transition points individually every 1.5s to circumvent blocking API throttles.
+
+### Added
+- **Multi-turn Refinement**: Enabled an array-based conversational history flow, allowing users to iteratively chat to filter and refine results without clearing maps.
+- **Navigator Geolocation**: Injected browser hook `getCurrentPosition` on mount to natively fetch, focus, and query context using the user's explicit coordinates.
+- **Gemini Structured Output**: The backend `/api/explore` now forces strictly formatted responses natively by supplying a `Pydantic` schema constraint to `google-genai`.
+
 ## [0.4.1] - 2026-04-06
 
 ### Added
