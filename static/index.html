@@ -116,6 +116,25 @@
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #resetBtn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px;
+    display: none;
+  }
+
+  #resetBtn:hover {
+    color: #ff8aa0;
   }
 
   .input-row {
@@ -497,6 +516,29 @@
   }
 
   .map-wrapper { flex: 1; position: relative; overflow: hidden; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    :root {
+      --sidebar-w: 100%;
+    }
+    
+    .sidebar {
+      position: absolute;
+      z-index: 1000;
+      height: 100vh;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    
+    .map-wrapper {
+      width: 100%;
+    }
+  }
 </style>
 </head>
 <body>
@@ -511,11 +553,11 @@
 
 <div class="workspace">
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="search-panel">
-      <div class="search-label" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="search-label">
         <span>Explore a Location</span>
-        <button id="resetBtn" style="background:transparent; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; display:none; padding:4px;">Clear</button>
+        <button id="resetBtn">Clear</button>
       </div>
       <div class="input-row">
         <input
@@ -525,7 +567,7 @@
           placeholder="e.g. coffee shops in Tokyo…"
           autocomplete="off"
         />
-        <button class="btn-icon" id="voiceBtn" title="Search by voice">
+        <button class="btn-icon" id="voiceBtn" title="Search by voice" aria-label="Voice search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -558,6 +600,13 @@
 </div>
 
 <script>
+// ── Demo Data (replaces missing API) ───────────────────────────────────────
+const DEMO_PLACES = [
+  { name: "Matcha Cafe", type: "cafe", description: "Artisanal matcha specialist", tags: ["organic", "cozy"], lat: 35.6762, lng: 139.6503, distance: "1.2 km" },
+  { name: "Ramen Ichiran", type: "restaurant", description: "24hr tonkotsu ramen", tags: ["late-night"], lat: 35.6745, lng: 139.6521, distance: "1.5 km" },
+  { name: "Shibuya Crossing", type: "landmark", description: "World famous intersection", tags: ["iconic"], lat: 35.6595, lng: 139.7012, distance: "2.1 km" }
+];
+
 // ── Map init ──────────────────────────────────────────────────────────────
 const map = L.map('map', {
   center: [20, 0],
@@ -578,16 +627,6 @@ let activeCard = null;
 let chatHistory = [];
 let userLocation = null;
 
-window.addEventListener('DOMContentLoaded', () => {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      map.flyTo([userLocation.lat, userLocation.lng], 13);
-      showToast('Detected your location!', '📍');
-    }, err => console.log('Geolocation disabled.'));
-  }
-});
-
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const searchInput  = document.getElementById('searchInput');
 const searchBtn    = document.getElementById('searchBtn');
@@ -596,8 +635,18 @@ const voiceStatus  = document.getElementById('voiceStatus');
 const resultsPanel = document.getElementById('resultsPanel');
 const queryChip    = document.getElementById('queryChip');
 const resetBtn     = document.getElementById('resetBtn');
+const sidebar      = document.getElementById('sidebar');
 
-// ── Clear Chat / Reset UI ────────────────────────────────────────────────
+// ── Geolocation ───────────────────────────────────────────────────────────
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    map.setView([userLocation.lat, userLocation.lng], 13);
+    showToast('Detected your location!', '📍');
+  }, err => console.log('Geolocation disabled.'));
+}
+
+// ── Clear / Reset ─────────────────────────────────────────────────────────
 resetBtn.addEventListener('click', () => {
   chatHistory = [];
   clearMarkers();
@@ -605,16 +654,16 @@ resetBtn.addEventListener('click', () => {
     <div class="empty-state">
       <div class="empty-icon">🗺️</div>
       <h3>Start Exploring</h3>
-      <p>Type a location or tap the mic to explore places nearby.</p>
+      <p>Type a location or tap the mic to explore places nearby. Results will appear here with map highlights.</p>
     </div>`;
   queryChip.style.display = 'none';
   resetBtn.style.display  = 'none';
   searchInput.value       = '';
-  showToast('Chat history cleared. Map reset.', '🧹');
+  showToast('Map reset.', '🧹');
   if (userLocation) {
-    map.flyTo([userLocation.lat, userLocation.lng], 13);
+    map.setView([userLocation.lat, userLocation.lng], 13);
   } else {
-    map.flyTo([20, 0], 2);
+    map.setView([20, 0], 2);
   }
 });
 
@@ -645,7 +694,7 @@ const COLORS = ['#3bf5c3','#6c8bff','#ff5f7e','#ffcf6b','#a78bff','#5ff0ff'];
 function createMarkerIcon(emoji, colorIndex) {
   const bg = COLORS[colorIndex % COLORS.length];
   return L.divIcon({
-    className: '',
+    className: 'custom-marker-container',
     iconSize:  [36, 36],
     iconAnchor:[18, 36],
     popupAnchor:[0, -38],
@@ -659,15 +708,12 @@ function createMarkerIcon(emoji, colorIndex) {
 function clearMarkers() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
+  activeCard = null;
 }
 
 // ── Render place cards + markers ─────────────────────────────────────────
-// FIX: Removed the extra random jitter that was applied here on top of the
-//      scatter already computed in searchWithClaude, which caused marker
-//      positions to drift further from their intended geocoded coordinates.
 function renderPlaces(places, query) {
   clearMarkers();
-  activeCard = null;
 
   if (!places || !places.length) {
     resultsPanel.innerHTML = `
@@ -694,7 +740,7 @@ function renderPlaces(places, query) {
 
   places.forEach((place, i) => {
     const emoji = getIcon(place.type);
-    const color = COLORS[i % COLORS.length];
+    const colorIndex = i % COLORS.length;
 
     // Card
     const card = document.createElement('div');
@@ -714,26 +760,26 @@ function renderPlaces(places, query) {
     `;
     resultsPanel.appendChild(card);
 
-    // Use pre-computed coordinates (no additional jitter)
-    const lat = place.lat;
-    const lng = place.lng;
-
-    const marker = L.marker([lat, lng], { icon: createMarkerIcon(emoji, i) })
-      .addTo(map)
-      .bindPopup(`
-        <div class="popup-title">${place.name}</div>
-        <div class="popup-type">${place.type || 'Place'}</div>
-        ${place.description ? `<div class="popup-desc">${place.description}</div>` : ''}
-      `);
+    // Marker
+    const marker = L.marker([place.lat, place.lng], { 
+      icon: createMarkerIcon(emoji, colorIndex) 
+    })
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">${place.name}</div>
+      <div class="popup-type">${place.type || 'Place'}</div>
+      ${place.description ? `<div class="popup-desc">${place.description}</div>` : ''}
+    `);
 
     markers.push(marker);
-    bounds.push([lat, lng]);
+    bounds.push([place.lat, place.lng]);
 
     // Card click → fly to + open popup
     card.addEventListener('click', () => {
       document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
-      map.flyTo([lat, lng], 16, { duration: 1.2 });
+      activeCard = card;
+      map.flyTo([place.lat, place.lng], 16, { duration: 1.2 });
       setTimeout(() => marker.openPopup(), 800);
     });
 
@@ -741,29 +787,40 @@ function renderPlaces(places, query) {
     marker.on('click', () => {
       document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
+      activeCard = card;
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
-
-    // LAZY GEOCODING: Overwrite dummy coordinate with real coordinate slowly
-    setTimeout(async () => {
-      // Don't geocode default placeholder strings easily
-      if (!place.name.toLowerCase().includes("fallback")) {
-        const strictQuery = place.name + ", " + query;
-        const realGeo = await geocode(strictQuery);
-        if (realGeo) {
-           marker.setLatLng(new L.LatLng(realGeo.lat, realGeo.lng));
-           bounds.push([realGeo.lat, realGeo.lng]);
-           // Re-fit maps if active so they pan over beautifully
-           map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
-        }
-      }
-    }, 1500 * (i + 1));
   });
 
   // Fit map to all markers
   if (bounds.length) {
     map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
   }
+}
+
+// ── Demo search (replaces API call) ───────────────────────────────────────
+async function demoSearch(query) {
+  setLoading(true);
+  resetBtn.style.display = 'block';
+  chatHistory.push({ role: 'user', content: query });
+  
+  // Simulate API delay
+  await new Promise(r => setTimeout(r, 1500));
+  
+  // Use demo data for Tokyo (you can extend this)
+  const places = query.toLowerCase().includes('tokyo') ? 
+    DEMO_PLACES.map(p => ({...p})) : 
+    DEMO_PLACES.map(p => ({
+      ...p, 
+      name: p.name.replace('Tokyo', 'Your City'),
+      lat: userLocation?.lat || 35.6762,
+      lng: userLocation?.lng || 139.6503
+    }));
+
+  renderPlaces(places, query);
+  chatHistory.push({ role: 'model', content: `Found ${places.length} places for "${query}"` });
+  setLoading(false);
+  showToast(`Found ${places.length} places!`, '🎉');
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
@@ -778,6 +835,7 @@ function showToast(msg, emoji = 'ℹ️') {
 // ── Loading state ─────────────────────────────────────────────────────────
 function setLoading(on) {
   searchBtn.disabled = on;
+  searchBtn.textContent = on ? 'Searching...' : 'Search';
   if (on) {
     resultsPanel.innerHTML = `
       <div class="section-title">Searching…</div>
@@ -788,104 +846,19 @@ function setLoading(on) {
   }
 }
 
-// ── Geocode location → get coordinates ───────────────────────────────────
-async function geocode(locationName) {
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=json&limit=1`;
-  
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await fetch(url, {
-        headers: {
-          'Accept-Language': 'en',
-          'User-Agent': 'Map-Genie/1.0 (https://github.com/darshil0/map-genie)'
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (!data.length) return null;
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
-      }
-    } catch (e) {
-      console.warn(`Geocoding attempt ${attempt + 1} failed, retrying...`, e);
-    }
-    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+// ── Text search ───────────────────────────────────────────────────────────
+searchBtn.addEventListener('click', () => {
+  const q = searchInput.value.trim();
+  if (!q) { 
+    showToast('Please enter a search query.', '💡'); 
+    return; 
   }
+  demoSearch(q);
+});
 
-  // Graceful degradation fallback
-  console.warn("Geocoding failed completely. Falling back to global view.");
-  return { lat: 20, lng: 0, display: "Fallback Context" };
-}
-
-// ── API: call FastAPI backend ─────────────────────────────
-async function searchWithClaude(query) {
-  setLoading(true);
-  resetBtn.style.display = 'block';
-  chatHistory.push({ role: 'user', content: query });
-  
-  try {
-    let response = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        response = await fetch("/api/explore", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: chatHistory,
-            location_context: userLocation
-          }),
-        });
-        if (response.ok || (response.status !== 429 && response.status < 500)) break;
-      } catch (e) {
-        if (attempt === 2) throw e;
-      }
-      showToast('Retrying API connection...', '⏳');
-      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
-    }
-
-    if (!response.ok) {
-      const errBody = await response.json().catch(() => ({}));
-      throw new Error(errBody.detail || `HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    // Save AI response to history so refinement works
-    chatHistory.push({ role: 'model', content: "Generated places successfully."});
-
-    // Geocode the general location 
-    const geo = await geocode(data.location || query);
-    if (!geo) {
-      showToast('Could not geocode main location.', '⚠️');
-      setLoading(false);
-      return;
-    }
-
-    // Assign realistic coordinates by scattering points around the geocoded center initially
-    const places = data.places.map((p, i) => {
-      const angle  = (i / data.places.length) * 2 * Math.PI;
-      const radius = 0.002 + Math.random() * 0.012; // ~200 m – 1.3 km spread
-      return {
-        ...p,
-        lat: geo.lat + Math.cos(angle) * radius,
-        lng: geo.lng + Math.sin(angle) * radius,
-      };
-    });
-
-    renderPlaces(places, data.location || query);
-  } catch (err) {
-    console.error(err);
-    resultsPanel.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <h3>Something went wrong</h3>
-        <p>${err.message}</p>
-      </div>`;
-    chatHistory.pop(); // Remove failed user message
-    showToast('Search failed.', '❌');
-  } finally {
-    setLoading(false);
-  }
-}
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchBtn.click();
+});
 
 // ── Voice input ───────────────────────────────────────────────────────────
 let recognition = null;
@@ -913,7 +886,7 @@ function initVoice() {
     searchInput.value = transcript;
     if (e.results[e.results.length - 1].isFinal) {
       stopListening();
-      if (transcript.trim()) searchWithClaude(transcript.trim());
+      if (transcript.trim()) demoSearch(transcript.trim());
     }
   };
 
@@ -936,9 +909,8 @@ function stopListening() {
 
 voiceBtn.addEventListener('click', () => {
   if (!recognition) recognition = initVoice();
-
   if (!recognition) {
-    showToast('Voice input is not supported in this browser.', '⚠️');
+    showToast('Voice input not supported in this browser.', '⚠️');
     return;
   }
 
@@ -949,19 +921,8 @@ voiceBtn.addEventListener('click', () => {
   }
 });
 
-// ── Text search ───────────────────────────────────────────────────────────
-searchBtn.addEventListener('click', () => {
-  const q = searchInput.value.trim();
-  if (!q) { showToast('Please enter a search query.', '💡'); return; }
-  searchWithClaude(q);
-});
-
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') searchBtn.click();
-});
-
-// ── Initial hint after 1 s ────────────────────────────────────────────────
-setTimeout(() => showToast('Try: "best ramen in Tokyo" or tap 🎤 to speak', '💡'), 1200);
+// ── Initial hint ──────────────────────────────────────────────────────────
+setTimeout(() => showToast('Try: "coffee shops in Tokyo" or tap 🎤', '💡'), 1200);
 </script>
 </body>
 </html>
