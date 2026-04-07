@@ -739,15 +739,29 @@ function setLoading(on) {
 // ── Geocode location → get coordinates ───────────────────────────────────
 async function geocode(locationName) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=json&limit=1`;
-  const res  = await fetch(url, {
-    headers: {
-      'Accept-Language': 'en',
-      'User-Agent': 'Map-Genie/1.0 (https://github.com/darshil0/map-genie)'
+  
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'Accept-Language': 'en',
+          'User-Agent': 'Map-Genie/1.0 (https://github.com/darshil0/map-genie)'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.length) return null;
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
+      }
+    } catch (e) {
+      console.warn(`Geocoding attempt ${attempt + 1} failed, retrying...`, e);
     }
-  });
-  const data = await res.json();
-  if (!data.length) return null;
-  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
+    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+  }
+
+  // Graceful degradation fallback
+  console.warn("Geocoding failed completely. Falling back to global view.");
+  return { lat: 20, lng: 0, display: "Fallback Context" };
 }
 
 // ── Claude API: parse query + generate places ─────────────────────────────
@@ -781,20 +795,33 @@ Do not include coordinates — those will be geocoded separately.`;
     // FIX: Added required anthropic-version header.
     // FIX: Added anthropic-dangerous-direct-browser-access header required for
     //      direct browser-to-API calls (bypasses the CORS preflight rejection).
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: query }],
-      }),
-    });
+    let response = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          body: JSON.stringify({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 1000,
+            system: systemPrompt,
+            messages: [{ role: "user", content: query }],
+          }),
+        });
+
+        if (response.ok || (response.status !== 429 && response.status < 500)) break;
+      } catch (e) {
+        console.warn(`Network error on attempt ${attempt + 1}`, e);
+        if (attempt === 2) throw e;
+      }
+      
+      showToast('Retrying API connection...', '⏳');
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    }
 
     // FIX: Check HTTP status before attempting to parse the response body.
     //      Previously, a 401 / 429 / 500 response would silently crash at
@@ -813,7 +840,18 @@ Do not include coordinates — those will be geocoded separately.`;
       throw new Error('Empty response from Claude API.');
     }
 
-    const parsed = JSON.parse(raw);
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseError) {
+      console.warn("Standard JSON parse failed, attempting regex recovery extraction...", parseError);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        throw new Error('Claude response contained unrecoverable invalid JSON.');
+      }
+    }
 
     // Geocode the location
     const geo = await geocode(parsed.location);

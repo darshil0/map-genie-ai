@@ -26,13 +26,23 @@ def get_gemini_response(prompt: str) -> str:
         raise ValueError("GEMINI_API_KEY not found in environment variables.")
 
     client = genai.Client(api_key=api_key)
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
-        )
-    except errors.APIError as e:
-        raise RuntimeError(f"Error calling Gemini API: {e}")
+    max_retries = 3
+    base_delay = 2
+
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+            )
+            break
+        except errors.APIError as e:
+            if attempt == max_retries - 1:
+                print(f"Warning: Gemini API call failed after {max_retries} attempts: {e}")
+                return "I'm sorry, the AI service is currently unavailable. Please try again later."
+            
+            import time
+            time.sleep(base_delay * (2 ** attempt))
 
     # FIX: guard against None response.text (was previously unhandled)
     if not response or not response.text:
