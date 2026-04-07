@@ -1,24 +1,27 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-
 # ---------------------------------------------------------------------------
-# FIX 1: load_dotenv is called at *module* level in main.py, so patching it
-#         inside the test function has no effect.  We patch os.getenv directly
-#         which is what the code actually reads at call-time.
+# FIX: Import get_gemini_response at module level so that the function object
+#      is resolved once, before any patches are applied.  Importing inside
+#      each test function forces a re-import on every call, which can return
+#      a cached module whose attributes were already bound before patching
+#      took effect — leading to tests that pass locally but fail under
+#      certain import-order conditions.
 #
-# FIX 2: @patch decorators are applied bottom-up, so the argument order was
-#         previously inverted (mock_getenv ↔ mock_load_dotenv were swapped).
-#         The corrected order is: outermost decorator → last argument.
+# Note on decorator order (preserved from v0.2.0):
+#   @patch decorators are applied bottom-up, so the argument order matches
+#   the innermost → outermost decorator top-to-bottom as written.
+#   e.g. @patch("A") over @patch("B") → def test(mock_b, mock_a)
 # ---------------------------------------------------------------------------
+
+from main import get_gemini_response  # noqa: E402  (after comment block)
 
 
 @patch("main.genai.Client")
 @patch("os.getenv")
 def test_get_gemini_response(mock_getenv, mock_client_class):
     """Happy-path: API key present, model returns a mocked response."""
-    from main import get_gemini_response
-
     # Setup mocks
     mock_getenv.return_value = "fake_api_key"
 
@@ -44,8 +47,6 @@ def test_get_gemini_response(mock_getenv, mock_client_class):
 @patch("os.getenv")
 def test_get_gemini_response_no_api_key(mock_getenv):
     """Missing API key should raise ValueError."""
-    from main import get_gemini_response
-
     mock_getenv.return_value = None
 
     with pytest.raises(ValueError, match="GEMINI_API_KEY not found in environment variables."):
@@ -56,8 +57,6 @@ def test_get_gemini_response_no_api_key(mock_getenv):
 @patch("os.getenv")
 def test_get_gemini_response_empty_text(mock_getenv, mock_client_class):
     """Empty/None response.text should raise RuntimeError."""
-    from main import get_gemini_response
-
     mock_getenv.return_value = "fake_api_key"
 
     mock_client_instance = MagicMock()
