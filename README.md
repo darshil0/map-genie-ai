@@ -1,123 +1,99 @@
-# Map-Genie 🗺️
+# 🧞‍♂️ Map-Genie
+**Your AI-Powered Travel Sidekick**
 
-An AI-powered place explorer that highlights locations on an interactive map, accepts both **voice and text input**, and surfaces a curated list of nearby places to visit. Powered by a robust FastAPI backend.
+Ever wish you could just talk to your map and have it instantly curate the perfect itinerary? Meet **Map-Genie**! 
 
----
-
-## Features
-
-- **Text search** — type any query like *"coffee shops in Amsterdam"* or *"temples near Kyoto"*
-- **Voice search** — tap the mic button and speak your query; live transcription fills the search box automatically
-- **AI-generated place list** — Gemini interprets your query, identifies the best-known places, and renders them as cards in the sidebar
-- **Interactive map** — custom emoji markers are placed on a dark CartoDB map; clicking a card flies the camera to that place; clicking a marker highlights its card
-- **Rich place cards** — each card shows name, category, a short description, distance estimate, and topic tags
-- **Self-Healing Architecture** — Both the frontend and backend utilize robust networking with exponential backoff on API calls, dynamic fallback rendering options on connection drops, and automatic JSON repair heuristics so simple glitches never break your map.
+Map-Genie is a lightning-fast, AI-powered place explorer that transforms your voice or text into a beautifully mapped visual guide. Whether you're hunting for *"the coziest coffee shops in Amsterdam"* or *"hidden temples near Kyoto"*, Map-Genie figures out exactly what you want and maps it for you locally in real-time.
 
 ---
 
-## Tech Stack
+## ✨ Why You'll Love It
 
-| Layer | Technology |
+- **🗣️ Just Speak Your Mind**: Tap the mic and tell Map-Genie what you're looking for! Our live-transcription handles the rest.
+- **🧠 Brains by Google Gemini**: Map-Genie's backend understands context. It doesn't just keyword-match; it interprets your vibe and finds the coolest, most relevant spots.
+- **🗺️ Interactive & Gorgeous**: Custom emoji markers drop beautifully onto a sleek, dark-mode CartoDB map. Click a place card, and watch the camera glide right to it.
+- **💬 Chat to Map**: Thanks to our multi-turn history engine, you can refine your search without clearing the map. Ask for restaurants, then casually say *"What about parks nearby?"* and watch the magic happen.
+- **🦸‍♂️ Self-Healing**: Network blipped? Gemini glitched? Don't sweat it. Map-Genie is armed with exponential backoff API retry-loops and clever JSON auto-repair mechanics, so your experience stays butter-smooth.
+
+---
+
+## 🛠️ The Magic Under the Hood
+
+We’ve pieced together an incredibly robust, full-stack architecture to keep things speedy and secure:
+
+| What it does | What powers it |
 |-------|------------|
-| Map rendering | [Leaflet.js](https://leafletjs.com/) 1.9.4 |
-| Map tiles | [CartoDB Dark Matter](https://carto.com/basemaps/) (OpenStreetMap data) |
-| Geocoding | [Nominatim](https://nominatim.org/) (OpenStreetMap) |
-| AI / place generation | [Google Gemini](https://ai.google.dev/) (`gemini-2.0-flash`) via backend |
-| Voice input | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
-| Typography | [Syne](https://fonts.google.com/specimen/Syne) + [DM Sans](https://fonts.google.com/specimen/DM+Sans) (Google Fonts) |
-| Python backend | [FastAPI](https://fastapi.tiangolo.com/), [google-genai](https://pypi.org/project/google-genai/) + [python-dotenv](https://pypi.org/project/python-dotenv/) |
-| Testing | [pytest](https://docs.pytest.org/) |
+| **The Brains (AI)** | [Google Gemini](https://ai.google.dev/) (`gemini-2.0-flash`) via our native backend |
+| **The Engine (Backend)** | [FastAPI](https://fastapi.tiangolo.com/), `google-genai` & `python-dotenv` |
+| **The Visuals (Frontend)** | Vanilla HTML/JS natively styled with Google SYNE fonts |
+| **The Canvas (Map)** | [Leaflet.js](https://leafletjs.com/) layered over [CartoDB Dark Matter](https://carto.com/basemaps/) |
+| **The Coordinates** | [Nominatim](https://nominatim.org/) OpenStreetMap Geocoding |
+| **The Ears** | Native [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
 
 ---
 
-## Quick Start
+## 🚀 Let's Get Started!
 
-### 1 — API Key Configuration
+Want to take Map-Genie for a spin on your local machine? It takes less than two minutes!
 
+### Step 1: Hook up your API Key
+First, grab a free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 ```bash
-cp .env.example .env          # insert your GEMINI_API_KEY
+# Copy the template to set up your environment variables
+cp .env.example .env
+
+# Open .env and paste your GEMINI_API_KEY inside!
 ```
 
-### 2 — Run the App
-
+### Step 2: Fire up the Engine
+Install the python requirements and spin up the blazing-fast FastAPI server:
 ```bash
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Navigate to `http://127.0.0.1:8000` gently in your web browser!
+### Step 3: Explore!
+Open your favorite web browser and gently navigate to:
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+*(Make sure your browser gives the site microphone permission if you want to use the voice features!)*
 
 ---
 
-## Running Tests (Python backend)
+## 🧪 Testing the Magic
 
+We love stable code! If you want to make sure the backend routing and Gemini schemas are behaving properly, just run:
 ```bash
 pytest
 ```
-
-All three test cases should pass:
-
-- `test_explore_endpoint_success` — happy path testing structured Gemini JSON output and 200 OK wrapper
-- `test_explore_endpoint_no_messages` — empty chat history correctly rejects with 400 Bad Request
-- `test_explore_endpoint_empty_response` — handles falsy API breaks via 503 Service Unavailable
+*You should see all our test validations glowing green!*
 
 ---
 
-## Browser Compatibility
+## 🧭 How Everything Fits Together
 
-| Feature | Chrome | Firefox | Safari | Edge |
-|---------|--------|---------|--------|------|
-| Map + search | ✅ | ✅ | ✅ | ✅ |
-| Voice input (Web Speech API) | ✅ | ❌ | ✅ (iOS 14.5+) | ✅ |
+Curious about how we organized the project? It's intentionally lightweight:
 
-Voice search relies on the [Web Speech API](https://caniuse.com/speech-recognition),
-which is not supported in Firefox. The app falls back gracefully — text search works
-in all browsers.
-
----
-
-## Project Structure
-
-```
+```text
 map-genie/
-├── main.py             # FastAPI backend & Gemini integrations
+├── main.py             # 🧠 The FastAPI brain & Gemini link
 ├── static/
-│   └── index.html      # Main web app 
-├── requirements.txt    # Python dependencies
-├── .env.example        # API key template
+│   └── index.html      # 🎨 The beautiful user interface
+├── requirements.txt    # 📦 Python toolbelt
 ├── tests/
-│   └── test_main.py    # Pytest suite
-├── CHANGELOG.md
-└── README.md
+│   └── test_main.py    # 🛡️ Defense against bugs
+└── (and a few config files like .env and .gitignore!)
 ```
 
 ---
 
-## Known Limitations
+## 🩹 Quirks & Considerations
 
-- **Lazy Geocoding fallback.** Rather than blocking operations for 8-seconds upfront while Nominatim rate-limits sequentially, the map immediately spins up radial placeholder points, which are automatically corrected and snapped to proper streets asynchronously one-by-one.
-- **Nominatim rate limits.** The geocoding step calls the public Nominatim endpoint,
-  which enforces a 1 request/second limit. Back-to-back searches may occasionally
-  return no geocoding result. Adding a short delay between searches or self-hosting
-  a Nominatim instance resolves this.
-- **Voice search requires microphone permission.** Browsers prompt for permission on
-  first use. HTTPS or `localhost` is strictly required for the Web Speech API in Chrome and Edge.
+Software is organic, and Map-Genie has a few lovable quirks to keep in mind:
+
+- **The "Lazy Pop" Effect**: Nominatim (our geocoding buddy) enforces a strict 1-request-per-second speed limit. To keep Map-Genie feeling fast, we instantly toss "placeholder" markers on the map the second Gemini answers. Over the next few seconds, you'll see them automatically "snap" to their true geographical street address in the background!
+- **Browser Compatibility**: Voice search is powered by the native Web Speech API. It works flawlessly on Chrome, Safari (iOS 14.5+), and Edge! Sorry Firefox friends, voice isn't natively supported yet—but you can still type your heart out!
 
 ---
 
-## Bug Fixes (cumulative)
-
-| Version | File | Issue | Fix |
-|---------|------|-------|-----|
-| 0.4.1 | `map-genie.html` | Missing Self-Healing parameters and invalid API strings | Built auto-retry wrapper logic spanning Anthropic and geocoding fetch APIs, and corrected Claude target model parsing |
-| 0.4.1 | `main.py` | Raised generic exception catching due to outdated SDK types | Refactored `errors` capture array to strictly handle active V0.1+ SDK instances (like `APIError`), sidestepping runtime TypeErrors |
-| 0.4.0 | `map-genie.html` | Missing `anthropic-version` header caused API 400 errors | Added `anthropic-version: 2023-06-01` header |
-| 0.4.0 | `map-genie.html` | Missing `anthropic-dangerous-direct-browser-access` header blocked CORS preflight | Added required header for direct browser API access |
-| 0.4.0 | `map-genie.html` | HTTP error responses (401, 429, 500) crashed silently at `JSON.parse` | Added `response.ok` guard that surfaces the real error message |
-| 0.4.0 | `map-genie.html` | Double jitter — coordinates scattered in `searchWithClaude` then jittered again in `renderPlaces` | Removed redundant jitter from `renderPlaces`; scatter applied once only |
-| 0.4.0 | `map-genie.html` | Inconsistent model string across project files | Aligned to `claude-3-5-sonnet-20241022` everywhere |
-| 0.4.0 | `tests/test_main.py` | `from main import` inside each test re-imported with stale module cache | Moved import to module level |
-| 0.2.0 | `tests/test_main.py` | `@patch` decorator order was reversed — `mock_getenv` and `mock_load_dotenv` args were swapped | Corrected to match bottom-up decorator → argument order |
-| 0.2.0 | `tests/test_main.py` | `load_dotenv` was patched inside the test function, but it runs at module-import time — patch was ineffective | Removed ineffective `load_dotenv` patch; test now only patches `os.getenv` |
-| 0.2.0 | `main.py` | `response.text` could be `None` (empty API response) — unhandled | Added `RuntimeError` guard when `response.text` is falsy |
-| 0.2.0 | `tests/test_main.py` | No test for empty/`None` API response | Added `test_get_gemini_response_empty_text` |
+*Built with ❤️ for explorers and wanderers. Dive in, and happy travels!*
