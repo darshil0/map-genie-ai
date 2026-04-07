@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.1] - 2026-04-06
 
+### Added
+- **Self-Healing Architecture**:
+  - `map-genie.html`: Added a 3-retry fetch loop with exponential backoff for the Claude API networking call.
+  - `map-genie.html`: Added a 3-retry loop for Nominatim geocoding rate-limits, including a gentle fallback view if it fully times out.
+  - `map-genie.html`: Added a regex-based JSON extraction heuristic so unrecoverably malformed JSON text from Claude doesn't brutally crash parsing.
+  - `main.py`: Created an organic Python loop encapsulating exponential backoff retries when encountering Gemini API drops and limits, returning generic fallbacks on terminal failures so the app remains perfectly robust.
+
 ### Fixed
 - `map-genie.html` & `README.md`: Corrected the invalid Anthropic model string from `claude-sonnet-4-5` to `claude-3-5-sonnet-20241022` to ensure successful API requests.
 - `main.py`: Updated Gemini API exception handler to only catch `errors.APIError`. Removed `errors.ClientError` and `errors.ServerError` to prevent runtime `AttributeError`s since they do not exist in the 0.1+ `google.genai` SDK.
