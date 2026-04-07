@@ -31,7 +31,7 @@ def get_gemini_response(prompt: str) -> str:
             model="gemini-2.0-flash",
             contents=prompt,
         )
-    except (errors.APIError, errors.ClientError, errors.ServerError) as e:
+    except errors.APIError as e:
         raise RuntimeError(f"Error calling Gemini API: {e}")
 
     # FIX: guard against None response.text (was previously unhandled)

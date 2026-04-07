@@ -21,7 +21,7 @@ An AI-powered place explorer that highlights locations on an interactive map, ac
 | Map rendering | [Leaflet.js](https://leafletjs.com/) 1.9.4 |
 | Map tiles | [CartoDB Dark Matter](https://carto.com/basemaps/) (OpenStreetMap data) |
 | Geocoding | [Nominatim](https://nominatim.org/) (OpenStreetMap) |
-| AI / place generation | [Anthropic Claude](https://docs.anthropic.com/) (`claude-sonnet-4-5`) |
+| AI / place generation | [Anthropic Claude](https://docs.anthropic.com/) (`claude-3-5-sonnet-20241022`) |
 | Voice input | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
 | Typography | [Syne](https://fonts.google.com/specimen/Syne) + [DM Sans](https://fonts.google.com/specimen/DM+Sans) (Google Fonts) |
 | Python backend (optional) | [google-genai](https://pypi.org/project/google-genai/) + [python-dotenv](https://pypi.org/project/python-dotenv/) |
@@ -35,7 +35,7 @@ An AI-powered place explorer that highlights locations on an interactive map, ac
 
 Just open `map-genie.html` in any modern browser.
 
-The app calls the Anthropic API directly from the browser using `claude-sonnet-4-5`.
+The app calls the Anthropic API directly from the browser using `claude-3-5-sonnet-20241022`.
 
 > **Note on API key:** The Anthropic API key is handled automatically by the
 > claude.ai artifact runtime. If you run this file outside claude.ai, add your
@@ -119,7 +119,7 @@ map-genie/
 | 0.4.0 | `map-genie.html` | Missing `anthropic-dangerous-direct-browser-access` header blocked CORS preflight | Added required header for direct browser API access |
 | 0.4.0 | `map-genie.html` | HTTP error responses (401, 429, 500) crashed silently at `JSON.parse` | Added `response.ok` guard that surfaces the real error message |
 | 0.4.0 | `map-genie.html` | Double jitter — coordinates scattered in `searchWithClaude` then jittered again in `renderPlaces` | Removed redundant jitter from `renderPlaces`; scatter applied once only |
-| 0.4.0 | `map-genie.html` | Inconsistent model string across project files | Aligned to `claude-sonnet-4-5` everywhere |
+| 0.4.0 | `map-genie.html` | Inconsistent model string across project files | Aligned to `claude-3-5-sonnet-20241022` everywhere |
 | 0.4.0 | `tests/test_main.py` | `from main import` inside each test re-imported with stale module cache | Moved import to module level |
 | 0.2.0 | `tests/test_main.py` | `@patch` decorator order was reversed — `mock_getenv` and `mock_load_dotenv` args were swapped | Corrected to match bottom-up decorator → argument order |
 | 0.2.0 | `tests/test_main.py` | `load_dotenv` was patched inside the test function, but it runs at module-import time — patch was ineffective | Removed ineffective `load_dotenv` patch; test now only patches `os.getenv` |
