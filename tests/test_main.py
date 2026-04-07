@@ -1,14 +1,15 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
+import os
 
 # Mock os.getenv before main is imported if needed, but TestClient will load .env
-import os
 os.environ["GEMINI_API_KEY"] = "fake_key_for_testing"
 
 from main import app
 
 client = TestClient(app)
+
 
 @patch("main.client")
 def test_explore_endpoint_success(mock_gemini_client):
@@ -19,11 +20,11 @@ def test_explore_endpoint_success(mock_gemini_client):
 
     payload = {
         "messages": [{"role": "user", "content": "coffee in Tokyo"}],
-        "location_context": None
+        "location_context": None,
     }
-    
+
     response = client.post("/api/explore", json=payload)
-    
+
     assert response.status_code == 200
     assert response.json()["location"] == "Tokyo"
 
@@ -42,10 +43,8 @@ def test_explore_endpoint_empty_response(mock_gemini_client):
     mock_response.text = None
     mock_gemini_client.models.generate_content.return_value = mock_response
 
-    payload = {
-        "messages": [{"role": "user", "content": "test"}]
-    }
-    
+    payload = {"messages": [{"role": "user", "content": "test"}]}
+
     response = client.post("/api/explore", json=payload)
     assert response.status_code == 503
     assert "AI Service error" in response.json()["detail"]

@@ -32,6 +32,7 @@ class Place(BaseModel):
     tags: List[str] = Field(description="List of relevant tags like 'food', 'art', etc.")
     distance: str = Field(description="Approximate distance (e.g. '0.5 km')")
 
+
 class ExploreResponse(BaseModel):
     location: str = Field(description="Canonical location name suitable for geocoding")
     category: str = Field(description="The general category label")
@@ -42,6 +43,7 @@ class ExploreResponse(BaseModel):
 class ChatMessage(BaseModel):
     role: str
     content: str
+
 
 class ExploreRequest(BaseModel):
     messages: List[ChatMessage]
@@ -61,7 +63,7 @@ def explore_endpoint(req: ExploreRequest):
         "their desired locations or refinements. "
         "Provide exactly 8 realistic, well-known places. Return data strictly fulfilling the requested schema."
     )
-    
+
     if req.location_context:
         system_instruction += f"\nThe user is currently near coordinates {req.location_context['lat']}, {req.location_context['lng']}."
 
@@ -69,7 +71,11 @@ def explore_endpoint(req: ExploreRequest):
     gemini_contents = []
     for msg in req.messages:
         role = "user" if msg.role == "user" else "model"
-        gemini_contents.append(types.Content(role=role, parts=[types.Part.from_text(text=msg.content)]))
+        gemini_contents.append(
+            types.Content(
+                role=role, parts=[types.Part.from_text(text=msg.content)]
+            )
+        )
 
     max_retries = 3
     base_delay = 2
@@ -83,27 +89,34 @@ def explore_endpoint(req: ExploreRequest):
                     system_instruction=system_instruction,
                     response_mime_type="application/json",
                     response_schema=ExploreResponse,
-                )
+                ),
             )
-            
+
             if not response.text:
-                 raise RuntimeError("Empty response received.")
-                 
+                raise RuntimeError("Empty response received.")
+
             # Strip markdown block occasionally appended by LLMs
-            raw_json = response.text.replace("```json", "").replace("```", "").strip()
-            
+            raw_json = (
+                response.text.replace("```json", "").replace("```", "").strip()
+            )
+
             # Note: With response_schema, Gemini returns a literal JSON object string
             return ExploreResponse.model_validate_json(raw_json)
-            
+
         except (errors.APIError, Exception) as e:
             if attempt == max_retries - 1:
-                print(f"Warning: Gemini API call failed after {max_retries} attempts: {e}")
-                raise HTTPException(status_code=503, detail=f"AI Service error: {str(e)}")
-            time.sleep(base_delay * (2 ** attempt))
+                print(
+                    f"Warning: Gemini API call failed after {max_retries} attempts: {e}"
+                )
+                raise HTTPException(
+                    status_code=503, detail=f"AI Service error: {str(e)}"
+                )
+            time.sleep(base_delay * (2**attempt))
 
 
 # Mount the static directory to serve index.html
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/")
 def serve_index():
