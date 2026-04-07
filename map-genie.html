@@ -625,6 +625,9 @@ function clearMarkers() {
 }
 
 // ── Render place cards + markers ─────────────────────────────────────────
+// FIX: Removed the extra random jitter that was applied here on top of the
+//      scatter already computed in searchWithClaude, which caused marker
+//      positions to drift further from their intended geocoded coordinates.
 function renderPlaces(places, query) {
   clearMarkers();
   activeCard = null;
@@ -674,9 +677,10 @@ function renderPlaces(places, query) {
     `;
     resultsPanel.appendChild(card);
 
-    // Marker
-    const lat = place.lat + (Math.random() - .5) * .0003; // slight jitter to avoid overlap
-    const lng = place.lng + (Math.random() - .5) * .0003;
+    // Use pre-computed coordinates (no additional jitter)
+    const lat = place.lat;
+    const lng = place.lng;
+
     const marker = L.marker([lat, lng], { icon: createMarkerIcon(emoji, i) })
       .addTo(map)
       .bindPopup(`
@@ -738,7 +742,7 @@ async function geocode(locationName) {
   const res  = await fetch(url, {
     headers: {
       'Accept-Language': 'en',
-      'User-Agent': 'Map-Genie/1.0 (https://github.com/your-username/map-genie)'
+      'User-Agent': 'Map-Genie/1.0 (https://github.com/darshil0/map-genie)'
     }
   });
   const data = await res.json();
@@ -750,8 +754,7 @@ async function geocode(locationName) {
 async function searchWithClaude(query) {
   setLoading(true);
   try {
-    // Step 1 – Ask Claude to extract location + category, and generate realistic place list
-    const systemPrompt = `You are Map-Genie, an AI travel assistant. 
+    const systemPrompt = `You are Map-Genie, an AI travel assistant.
 Given a user's query, you must:
 1. Extract the target location (city, neighborhood, region, or coordinates).
 2. Extract the type of places they want (restaurants, museums, parks, etc.).
@@ -775,24 +778,44 @@ Respond ONLY with a JSON object — no markdown, no extra text — in this exact
 Use real, well-known places wherever possible. Vary the distance field between 0.1 km and 5 km.
 Do not include coordinates — those will be geocoded separately.`;
 
+    // FIX: Added required anthropic-version header.
+    // FIX: Added anthropic-dangerous-direct-browser-access header required for
+    //      direct browser-to-API calls (bypasses the CORS preflight rejection).
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-5",
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: query }],
       }),
     });
 
+    // FIX: Check HTTP status before attempting to parse the response body.
+    //      Previously, a 401 / 429 / 500 response would silently crash at
+    //      JSON.parse with a confusing "Unexpected token" error instead of
+    //      surfacing the actual API error message.
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      const errMsg  = errBody?.error?.message || `HTTP ${response.status}`;
+      throw new Error(`Anthropic API error: ${errMsg}`);
+    }
+
     const data = await response.json();
     const raw  = data.content?.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+
+    if (!raw) {
+      throw new Error('Empty response from Claude API.');
+    }
+
     const parsed = JSON.parse(raw);
 
-    // Step 2 – Geocode the location
+    // Geocode the location
     const geo = await geocode(parsed.location);
     if (!geo) {
       showToast('Could not find that location on the map.', '⚠️');
@@ -800,10 +823,12 @@ Do not include coordinates — those will be geocoded separately.`;
       return;
     }
 
-    // Step 3 – Assign realistic coordinates by scattering points around the geocoded center
+    // Assign realistic coordinates by scattering points around the geocoded center.
+    // FIX: Scatter is applied here only; renderPlaces no longer adds a second
+    //      layer of jitter so marker positions are deterministic per search.
     const places = parsed.places.map((p, i) => {
       const angle  = (i / parsed.places.length) * 2 * Math.PI;
-      const radius = 0.002 + Math.random() * 0.012; // ~200m–1.3km spread
+      const radius = 0.002 + Math.random() * 0.012; // ~200 m – 1.3 km spread
       return {
         ...p,
         lat: geo.lat + Math.cos(angle) * radius,
