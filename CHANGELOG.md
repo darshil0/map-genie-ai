@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-04-06
+
+### Added
+- **UI Reset**: Integrated a 'Clear Map' button inside the frontend interface to instantly wipe markers and history cache during multi-turn browsing sessions.
+- **Test Integrity**: Injected `__init__.py` inside `/tests` to solidify absolute import path resolution across cross-platform OS environments.
+
+### Fixed
+- **Markdown Hallucinations**: Pre-emptively stripped Markdown code block wrappings (like \`\`\`json) directly off `response.text` payloads in `main.py` before passing to Pydantic validation, shielding the backend from 500 error loops.
+- **Legacy Typography**: Fully phased out obsolete Claude syntax references from `README.md` and brought test names and descriptions strictly up to date with the V2 architecture.
+
 ## [0.5.0] - 2026-04-06
 
 ### Changed
