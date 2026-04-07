@@ -26,11 +26,11 @@ python3 main.py
 
 ### 2 — Map-Genie web app
 
-Just open `map-genie.html` in any modern browser.  
-The app calls the Anthropic API directly from the browser using `claude-sonnet-4-20250514`.  
+Just open `map-genie.html` in any modern browser.
+The app calls the Anthropic API directly from the browser using `claude-sonnet-4-20250514`.
 No server required.
 
-> **Note:** The Anthropic API key is handled by the claude.ai artifact runtime.  
+> **Note:** The Anthropic API key is handled by the claude.ai artifact runtime.
 > If you run this outside claude.ai, add your key to the fetch headers in `map-genie.html`.
 
 ---
@@ -48,11 +48,11 @@ pytest
 ```
 map-genie/
 ├── map-genie.html      # Main web app (standalone)
-├── main.py             # Python / Gemini API starter (fixed)
+├── main.py             # Python / Gemini API starter
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # API key template
 ├── tests/
-│   └── test_main.py    # Pytest suite (fixed)
+│   └── test_main.py    # Pytest suite
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -62,7 +62,7 @@ map-genie/
 ## Bug Fixes (from original codebase)
 
 | File | Issue | Fix |
-|---|---|---|
+|------|-------|-----|
 | `tests/test_main.py` | `@patch` decorator order was reversed — `mock_getenv` and `mock_load_dotenv` args were swapped | Corrected to match bottom-up decorator → argument order |
 | `tests/test_main.py` | `load_dotenv` was patched inside the test function, but it runs at module-import time — patch was ineffective | Removed ineffective `load_dotenv` patch; test now only patches `os.getenv` |
 | `main.py` | `response.text` could be `None` (empty API response) — unhandled | Added `RuntimeError` guard when `response.text` is falsy |
