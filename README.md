@@ -11,6 +11,7 @@ An AI-powered place explorer that highlights locations on an interactive map, ac
 - **AI-generated place list** — Claude interprets your query, identifies the best-known places, and renders them as cards in the sidebar
 - **Interactive map** — custom emoji markers are placed on a dark CartoDB map; clicking a card flies the camera to that place; clicking a marker highlights its card
 - **Rich place cards** — each card shows name, category, a short description, distance estimate, and topic tags
+- **Self-Healing Architecture** — Both the frontend and backend utilize robust networking with exponential backoff on API calls, dynamic fallback rendering options on connection drops, and automatic JSON repair heuristics so simple glitches never break your map.
 
 ---
 
@@ -115,6 +116,8 @@ map-genie/
 
 | Version | File | Issue | Fix |
 |---------|------|-------|-----|
+| 0.4.1 | `map-genie.html` | Missing Self-Healing parameters and invalid API strings | Built auto-retry wrapper logic spanning Anthropic and geocoding fetch APIs, and corrected Claude target model parsing |
+| 0.4.1 | `main.py` | Raised generic exception catching due to outdated SDK types | Refactored `errors` capture array to strictly handle active V0.1+ SDK instances (like `APIError`), sidestepping runtime TypeErrors |
 | 0.4.0 | `map-genie.html` | Missing `anthropic-version` header caused API 400 errors | Added `anthropic-version: 2023-06-01` header |
 | 0.4.0 | `map-genie.html` | Missing `anthropic-dangerous-direct-browser-access` header blocked CORS preflight | Added required header for direct browser API access |
 | 0.4.0 | `map-genie.html` | HTTP error responses (401, 429, 500) crashed silently at `JSON.parse` | Added `response.ok` guard that surfaces the real error message |
