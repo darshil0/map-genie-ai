@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-04-06
+
+### Added
+- **Premium Glassmorphic UI**: Completely overhauled the frontend architecture. Map-Genie now features an absolute full-viewport canvas with a floating, frosted-glass sidebar.
+- **Micro-Animations**: Injected staggered CSS entry animations for search results and hover-reactive map icons using high-end Bezier transitions.
+- **Decoupled Styling**: Migrated 500+ lines of inline CSS into a standalone `static/style.css` for cleaner code and performance.
+
+### Changed
+- **Color Theory & Typography**: Updated to a vibrant Neon Aqua and Purple gradient aesthetic with rich Syne headlines.
+- **Custom Map Droplets**: Replaced generic rectangle markers with beautiful, semi-transparent droplet-shaped icons that react to user interaction.
+
 ## [0.5.1] - 2026-04-06
 
 ### Added
