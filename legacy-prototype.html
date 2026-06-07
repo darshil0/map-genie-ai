@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Map-Genie — Explore the World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg:        #0b0f1a;
+    --surface:   #121826;
+    --surface2:  #1a2236;
+    --border:    #232f45;
+    --accent:    #3bf5c3;
+    --accent2:   #6c8bff;
+    --danger:    #ff5f7e;
+    --text:      #e8edf5;
+    --muted:     #677590;
+    --card-glow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,.45);
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius:    14px;
+    --sidebar-w: 380px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse-dot 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%,100% { transform: scale(1); opacity:1; }
+    50%      { transform: scale(1.6); opacity:.6; }
+  }
+
+  .header-tagline {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-left: auto;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  /* ── Layout ── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* ── Search panel ── */
+  .search-panel {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .search-label {
+    font-family: var(--font-head);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #resetBtn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px;
+    display: none;
+  }
+
+  #resetBtn:hover {
+    color: #ff8aa0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    font-size: .9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+
+  .search-input:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(108,139,255,.15);
+  }
+
+  .btn-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-icon.recording {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(255,95,126,.1);
+    animation: ring 1s ease-in-out infinite;
+  }
+
+  @keyframes ring {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,95,126,.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(255,95,126,0); }
+  }
+
+  .btn-search {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #0b0f1a;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: .85rem;
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .btn-search:hover { background: #5fffd4; transform: translateY(-1px); }
+  .btn-search:active { transform: translateY(0); }
+  .btn-search:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .voice-status {
+    margin-top: 10px;
+    font-size: .78rem;
+    color: var(--danger);
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+
+  .voice-status.visible { opacity: 1; }
+
+  .voice-dot {
+    width: 6px; height: 6px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── Results panel ── */
+  .results-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .results-panel::-webkit-scrollbar { width: 4px; }
+  .results-panel::-webkit-scrollbar-track { background: transparent; }
+  .results-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title .count-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: .65rem;
+    color: var(--accent);
+  }
+
+  /* ── Place card ── */
+  .place-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color .2s, transform .15s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .place-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent2);
+    border-radius: 0 2px 2px 0;
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: transform .2s;
+  }
+
+  .place-card:hover {
+    border-color: var(--accent2);
+    transform: translateX(3px);
+    box-shadow: var(--card-glow);
+  }
+
+  .place-card:hover::before { transform: scaleY(1); }
+
+  .place-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(59,245,195,.2), var(--card-glow);
+  }
+
+  .place-card.active::before {
+    background: var(--accent);
+    transform: scaleY(1);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .card-meta { flex: 1; }
+
+  .card-name {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .card-type {
+    font-size: .72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .card-dist {
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .card-desc {
+    font-size: .8rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: .68rem;
+    color: var(--muted);
+  }
+
+  /* ── Empty / loading states ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+  .empty-state h3 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .empty-state p { font-size: .82rem; line-height: 1.6; }
+
+  .loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 40px 0;
+  }
+
+  .loading-dots span {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: .2s; background: var(--accent2); }
+  .loading-dots span:nth-child(3) { animation-delay: .4s; background: var(--danger); }
+
+  @keyframes bounce {
+    0%,80%,100% { transform: scale(0); opacity: .3; }
+    40%          { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Map ── */
+  #map {
+    flex: 1;
+    background: var(--bg);
+  }
+
+  /* Leaflet overrides */
+  .leaflet-container { background: #0b0f1a !important; font-family: var(--font-body); }
+
+  .leaflet-popup-content-wrapper {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--card-glow) !important;
+    color: var(--text) !important;
+  }
+
+  .leaflet-popup-tip { background: var(--surface) !important; }
+
+  .leaflet-popup-close-button { color: var(--muted) !important; }
+  .leaflet-popup-close-button:hover { color: var(--text) !important; }
+
+  .popup-title {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: .95rem;
+    margin-bottom: 4px;
+  }
+
+  .popup-type {
+    font-size: .72rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+
+  .popup-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── Custom marker ── */
+  .custom-marker {
+    width: 36px; height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(255,255,255,.15);
+    box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    transition: transform .2s;
+  }
+
+  .custom-marker {
+    width: 36px; height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(255,255,255,.15);
+    box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    transition: transform .2s;
+  }
+
+  .custom-marker .inner {
+    transform: rotate(45deg);
+    font-size: 1rem;
+  }
+
+  /* ── Map overlay: query chip ── */
+  .query-chip {
+    position: absolute;
+    top: 16px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 30px;
+    padding: 6px 18px;
+    font-size: .8rem;
+    color: var(--accent);
+    font-family: var(--font-head);
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 500;
+    white-space: nowrap;
+    box-shadow: 0 0 20px rgba(59,245,195,.2);
+    animation: fade-in .4s ease;
+    display: none;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-size: .83rem;
+    color: var(--text);
+    box-shadow: var(--card-glow);
+    z-index: 9999;
+    animation: slide-up .3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .map-wrapper { flex: 1; position: relative; overflow: hidden; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    :root {
+      --sidebar-w: 100%;
+    }
+    
+    .sidebar {
+      position: absolute;
+      z-index: 1000;
+      height: 100vh;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    
+    .map-wrapper {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="workspace">
+  <!-- Map (Now full screen background) -->
+  <div class="map-wrapper">
+    <div class="query-chip" id="queryChip"></div>
+    <div id="map"></div>
+  </div>
+
+  <!-- Floating Glass Sidebar -->
+  <aside class="sidebar">
+    <header>
+      <div class="logo">
+        <div class="logo-dot"></div>
+        Map-Genie
+      </div>
+      <span class="header-tagline">AI-Powered Travel Sidekick</span>
+    </header>
+
+    <div class="search-panel">
+      <div class="search-label">
+        <span>Explore a Location</span>
+        <button id="resetBtn">Clear</button>
+      </div>
+      <div class="input-row">
+        <input
+          type="text"
+          class="search-input"
+          id="searchInput"
+          placeholder="e.g. coffee shops in Tokyo…"
+          autocomplete="off"
+        />
+        <button class="btn-icon" id="voiceBtn" title="Search by voice" aria-label="Voice search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button class="btn-search" id="searchBtn">Search</button>
+      </div>
+      <div class="voice-status" id="voiceStatus">
+        <span class="voice-dot"></span>
+        Listening…
+      </div>
+    </div>
+
+    <div class="results-panel" id="resultsPanel">
+      <div class="empty-state">
+        <div class="empty-icon">🗺️</div>
+        <h3>Start Exploring</h3>
+        <p>Type a location or tap the mic to explore places nearby. Results will appear here with map highlights.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ── Demo Data (replaces missing API) ───────────────────────────────────────
+const DEMO_PLACES = [
+  { name: "Matcha Cafe", type: "cafe", description: "Artisanal matcha specialist", tags: ["organic", "cozy"], lat: 35.6762, lng: 139.6503, distance: "1.2 km" },
+  { name: "Ramen Ichiran", type: "restaurant", description: "24hr tonkotsu ramen", tags: ["late-night"], lat: 35.6745, lng: 139.6521, distance: "1.5 km" },
+  { name: "Shibuya Crossing", type: "landmark", description: "World famous intersection", tags: ["iconic"], lat: 35.6595, lng: 139.7012, distance: "2.1 km" }
+];
+
+// ── Map init ──────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [20, 0],
+  zoom: 2,
+  zoomControl: true,
+});
+
+// Dark CartoDB tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/">OSM</a>',
+  subdomains: 'abcd',
+  maxZoom: 20,
+}).addTo(map);
+
+// ── State ─────────────────────────────────────────────────────────────────
+let markers = [];
+let activeCard = null;
+let chatHistory = [];
+let userLocation = null;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const searchInput  = document.getElementById('searchInput');
+const searchBtn    = document.getElementById('searchBtn');
+const voiceBtn     = document.getElementById('voiceBtn');
+const voiceStatus  = document.getElementById('voiceStatus');
+const resultsPanel = document.getElementById('resultsPanel');
+const queryChip    = document.getElementById('queryChip');
+const resetBtn     = document.getElementById('resetBtn');
+const sidebar      = document.getElementById('sidebar');
+
+// ── Geolocation ───────────────────────────────────────────────────────────
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    map.setView([userLocation.lat, userLocation.lng], 13);
+    showToast('Detected your location!', '📍');
+  }, err => console.log('Geolocation disabled.'));
+}
+
+// ── Clear / Reset ─────────────────────────────────────────────────────────
+resetBtn.addEventListener('click', () => {
+  chatHistory = [];
+  clearMarkers();
+  resultsPanel.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🗺️</div>
+      <h3>Start Exploring</h3>
+      <p>Type a location or tap the mic to explore places nearby. Results will appear here with map highlights.</p>
+    </div>`;
+  queryChip.style.display = 'none';
+  resetBtn.style.display  = 'none';
+  searchInput.value       = '';
+  showToast('Map reset.', '🧹');
+  if (userLocation) {
+    map.setView([userLocation.lat, userLocation.lng], 13);
+  } else {
+    map.setView([20, 0], 2);
+  }
+});
+
+// ── Category → emoji mapping ──────────────────────────────────────────────
+const CATEGORY_ICONS = {
+  restaurant: '🍽️', cafe: '☕', coffee: '☕', bar: '🍸', pub: '🍺',
+  museum: '🏛️', art: '🎨', gallery: '🖼️', theatre: '🎭', cinema: '🎬',
+  park: '🌿', garden: '🌸', nature: '🏔️', beach: '🏖️', lake: '🏞️',
+  hotel: '🏨', hostel: '🛏️', resort: '🏝️',
+  shopping: '🛍️', market: '🏪', mall: '🛒',
+  temple: '⛩️', church: '⛪', mosque: '🕌', monument: '🗽',
+  hospital: '🏥', pharmacy: '💊',
+  university: '🎓', school: '📚', library: '📖',
+  airport: '✈️', station: '🚉', port: '⚓',
+  sports: '⚽', gym: '💪', spa: '🧖',
+  default: '📍',
+};
+
+function getIcon(type = '') {
+  const key = Object.keys(CATEGORY_ICONS).find(k => type.toLowerCase().includes(k));
+  return key ? CATEGORY_ICONS[key] : CATEGORY_ICONS.default;
+}
+
+// ── Color palette for markers ─────────────────────────────────────────────
+const COLORS = ['#3bf5c3','#6c8bff','#ff5f7e','#ffcf6b','#a78bff','#5ff0ff'];
+
+// ── Create custom DivIcon ─────────────────────────────────────────────────
+function createMarkerIcon(emoji, colorIndex) {
+  const bg = COLORS[colorIndex % COLORS.length];
+  return L.divIcon({
+    className: 'custom-icon',
+    iconSize:  [36, 36],
+    iconAnchor:[18, 36],
+    popupAnchor:[0, -36],
+    html: `<div class="custom-marker-droplet" style="background:${bg}20;border-color:${bg}">
+             <div class="inner">${emoji}</div>
+           </div>`,
+  });
+}
+
+// ── Clear existing markers ────────────────────────────────────────────────
+function clearMarkers() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  activeCard = null;
+}
+
+// ── Render place cards + markers ─────────────────────────────────────────
+function renderPlaces(places, query) {
+  clearMarkers();
+
+  if (!places || !places.length) {
+    resultsPanel.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No Results Found</h3>
+        <p>Try a different query or a more specific location name.</p>
+      </div>`;
+    return;
+  }
+
+  // Show query chip
+  queryChip.textContent = `"${query}"`;
+  queryChip.style.display = 'block';
+
+  // Build sidebar
+  resultsPanel.innerHTML = `
+    <div class="section-title">
+      Nearby Places
+      <span class="count-badge">${places.length}</span>
+    </div>`;
+
+  const bounds = [];
+
+  places.forEach((place, i) => {
+    const emoji = getIcon(place.type);
+    const colorIndex = i % COLORS.length;
+
+    // Card
+    const card = document.createElement('div');
+    card.className = `place-card`;
+    card.style.animationDelay = `${i * 0.08}s`; /* Staggered CSS pop-in */
+    card.dataset.index = i;
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-icon">${emoji}</div>
+        <div class="card-meta">
+          <div class="card-name">${place.name}</div>
+          <div class="card-type">${place.type || 'Place'}</div>
+        </div>
+        ${place.distance ? `<div class="card-dist">${place.distance}</div>` : ''}
+      </div>
+      ${place.description ? `<div class="card-desc">${place.description}</div>` : ''}
+      ${place.tags?.length ? `<div class="card-tags">${place.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+    `;
+    resultsPanel.appendChild(card);
+
+    // Marker
+    const marker = L.marker([place.lat, place.lng], { 
+      icon: createMarkerIcon(emoji, colorIndex) 
+    })
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">${place.name}</div>
+      <div class="popup-type">${place.type || 'Place'}</div>
+      ${place.description ? `<div class="popup-desc">${place.description}</div>` : ''}
+    `);
+
+    markers.push(marker);
+    bounds.push([place.lat, place.lng]);
+
+    // Card click → fly to + open popup
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      activeCard = card;
+      map.flyTo([place.lat, place.lng], 16, { duration: 1.2 });
+      setTimeout(() => marker.openPopup(), 800);
+    });
+
+    // Marker click → highlight card
+    marker.on('click', () => {
+      document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      activeCard = card;
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+
+  // Fit map to all markers
+  if (bounds.length) {
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
+  }
+}
+
+// ── Demo search (replaces API call) ───────────────────────────────────────
+async function demoSearch(query) {
+  setLoading(true);
+  resetBtn.style.display = 'block';
+  chatHistory.push({ role: 'user', content: query });
+  
+  // Simulate API delay
+  await new Promise(r => setTimeout(r, 1500));
+  
+  // Use demo data for Tokyo (you can extend this)
+  const places = query.toLowerCase().includes('tokyo') ? 
+    DEMO_PLACES.map(p => ({...p})) : 
+    DEMO_PLACES.map(p => ({
+      ...p, 
+      name: p.name.replace('Tokyo', 'Your City'),
+      lat: userLocation?.lat || 35.6762,
+      lng: userLocation?.lng || 139.6503
+    }));
+
+  renderPlaces(places, query);
+  chatHistory.push({ role: 'model', content: `Found ${places.length} places for "${query}"` });
+  setLoading(false);
+  showToast(`Found ${places.length} places!`, '🎉');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg, emoji = 'ℹ️') {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span>${emoji}</span> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Loading state ─────────────────────────────────────────────────────────
+function setLoading(on) {
+  searchBtn.disabled = on;
+  searchBtn.textContent = on ? 'Searching...' : 'Search';
+  if (on) {
+    resultsPanel.innerHTML = `
+      <div class="section-title">Searching…</div>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>`;
+    queryChip.style.display = 'none';
+  }
+}
+
+// ── Text search ───────────────────────────────────────────────────────────
+searchBtn.addEventListener('click', () => {
+  const q = searchInput.value.trim();
+  if (!q) { 
+    showToast('Please enter a search query.', '💡'); 
+    return; 
+  }
+  demoSearch(q);
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchBtn.click();
+});
+
+// ── Voice input ───────────────────────────────────────────────────────────
+let recognition = null;
+let isListening = false;
+
+function initVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+
+  const rec = new SpeechRecognition();
+  rec.lang = 'en-US';
+  rec.continuous = false;
+  rec.interimResults = true;
+
+  rec.onstart = () => {
+    isListening = true;
+    voiceBtn.classList.add('recording');
+    voiceStatus.classList.add('visible');
+  };
+
+  rec.onresult = (e) => {
+    const transcript = Array.from(e.results)
+      .map(r => r[0].transcript)
+      .join('');
+    searchInput.value = transcript;
+    if (e.results[e.results.length - 1].isFinal) {
+      stopListening();
+      if (transcript.trim()) demoSearch(transcript.trim());
+    }
+  };
+
+  rec.onerror = (e) => {
+    stopListening();
+    showToast(`Voice error: ${e.error}`, '🎤');
+  };
+
+  rec.onend = () => stopListening();
+
+  return rec;
+}
+
+function stopListening() {
+  isListening = false;
+  voiceBtn.classList.remove('recording');
+  voiceStatus.classList.remove('visible');
+  if (recognition) recognition.stop();
+}
+
+voiceBtn.addEventListener('click', () => {
+  if (!recognition) recognition = initVoice();
+  if (!recognition) {
+    showToast('Voice input not supported in this browser.', '⚠️');
+    return;
+  }
+
+  if (isListening) {
+    stopListening();
+  } else {
+    recognition.start();
+  }
+});
+
+// ── Initial hint ──────────────────────────────────────────────────────────
+setTimeout(() => showToast('Try: "coffee shops in Tokyo" or tap 🎤', '💡'), 1200);
+</script>
+</body>
+</html>
