@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, MapLocation } from '../types';
 import WeatherWidget from './WeatherWidget';
@@ -138,6 +138,17 @@ export default function MapContainer({
 
       const spec = catColorSpec[place.category] || catColorSpec.custom;
 
+      // Sanitize user inputs for safe HTML injection
+      const sanitize = (str: string) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      };
+
+      const safeEmoji = sanitize(place.emoji || '📍');
+      const safeName = sanitize(place.name);
+      const safeDescription = sanitize(place.description);
+
       // Icon creation using category-specific CSS pulses
       const customEmojiIcon = L.divIcon({
         html: `
@@ -160,7 +171,7 @@ export default function MapContainer({
                 ? 'bg-amber-950/90 border border-amber-500/50 opacity-70 scale-95'
                 : 'bg-slate-900/90 border border-white/10 hover:border-white/40 text-xl'
             } cursor-pointer hover:scale-110 active:scale-95">
-              <span>${place.emoji || '📍'}</span>
+              <span>${safeEmoji}</span>
             </div>
             ${
               !isGeocoded
@@ -184,10 +195,10 @@ export default function MapContainer({
         <div class="p-2 select-none min-w-[160px]">
           <div class="flex items-center gap-1.5 font-display font-semibold text-white">
             ${routeSeqNumber ? `<span class="bg-indigo-600/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-sm select-none mr-1">Spot ${routeSeqNumber}</span>` : ''}
-            <span class="text-xl">${place.emoji}</span>
-            <span>${place.name}</span>
+            <span class="text-xl">${safeEmoji}</span>
+            <span>${safeName}</span>
           </div>
-          <p class="mt-1.5 text-xs text-slate-300 leading-snug font-sans">${place.description}</p>
+          <p class="mt-1.5 text-xs text-slate-300 leading-snug font-sans">${safeDescription}</p>
           <div class="mt-2 text-[9px] font-mono text-slate-400 border-t border-slate-800/80 pt-1 flex items-center justify-between">
             <span class="uppercase tracking-wider font-bold text-indigo-400">${place.category}</span>
             <span class="${!isGeocoded ? 'text-amber-400 font-bold' : 'text-emerald-400'}">
@@ -257,10 +268,10 @@ export default function MapContainer({
 
   // 5. Automatically adjust map zoom level to include all active markers whenever a new list of places is generated/updated.
   // Order-invariant key prevents map jumping on simple sequencing tasks.
-  const placesBoundsTrackingKey = [...places]
+  const placesBoundsTrackingKey = useMemo(() => [...places]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((p) => `${p.id}-${p.latitude}-${p.longitude}`)
-    .join(',');
+    .join(','), [places]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

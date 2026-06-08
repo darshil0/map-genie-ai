@@ -10,25 +10,9 @@ import {
   Mic,
   MicOff,
   Compass,
-  MapPin,
-  Map as MapIcon,
-  RotateCcw,
   Navigation,
-  Loader2,
   Info,
-  BookOpen,
-  Plus,
-  Trash2,
-  Edit3,
-  ArrowUp,
-  ArrowDown,
-  X,
-  Download,
   Layers,
-  Save,
-  Check,
-  PlusCircle,
-  HelpCircle,
   MessageSquare
 } from 'lucide-react';
 import { Place, Message, MapLocation } from './types';
@@ -36,6 +20,12 @@ import MapContainer from './components/MapContainer';
 import ItineraryAnalytics from './components/ItineraryAnalytics';
 import { geocodeAddress } from './utils/geocoder';
 import { US_STATES_DATA } from './data/usStatesData';
+
+// Modular components
+import ControlsPanel from './components/ControlsPanel';
+import ItineraryForm from './components/ItineraryForm';
+import ChatPanel from './components/ChatPanel';
+import PlannerWorkspace from './components/PlannerWorkspace';
 
 const STARTER_PROMPTS = [
   { text: 'Cozy coffee shops in Amsterdam', icon: '☕' },
@@ -106,12 +96,14 @@ export default function App() {
   const [newRouteName, setNewRouteName] = useState('');
 
   // Form Fields
-  const [formName, setFormName] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formAddress, setFormAddress] = useState('');
-  const [formCategory, setFormCategory] = useState('cafe');
-  const [formEmoji, setFormEmoji] = useState('📍');
-  const [formWhyMatch, setFormWhyMatch] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    address: '',
+    category: 'cafe',
+    emoji: '📍',
+    whyMatch: ''
+  });
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -124,13 +116,17 @@ export default function App() {
     const savedCustomRoutes = localStorage.getItem('map_genie_custom_saved_routes');
 
     if (savedCustomRoutes) {
-      try { combackSavedRoutes(JSON.parse(savedCustomRoutes)); } catch (_) {}
+      try { restoreSavedRoutes(JSON.parse(savedCustomRoutes)); } catch (_) {}
     }
 
     if (savedMessages && savedPlaces && savedLocation) {
-      setMessages(JSON.parse(savedMessages));
-      setPlaces(JSON.parse(savedPlaces));
-      setCurrentLocation(JSON.parse(savedLocation));
+      try {
+        setMessages(JSON.parse(savedMessages));
+        setPlaces(JSON.parse(savedPlaces));
+        setCurrentLocation(JSON.parse(savedLocation));
+      } catch (err) {
+        console.error("Failed to parse saved session from localStorage:", err);
+      }
     } else {
       // Welcome Intro
       const welcomeMsg: Message = {
@@ -155,7 +151,7 @@ export default function App() {
   }, []);
 
   // Helper because variable hoist
-  const combackSavedRoutes = (parsed: any[]) => {
+  const restoreSavedRoutes = (parsed: any[]) => {
     setCustomSavedRoutes(parsed);
   };
 
@@ -210,6 +206,12 @@ export default function App() {
 
       recognitionRef.current = rec;
     }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
   }, []);
 
   // Toggle voice recognition
@@ -253,12 +255,14 @@ export default function App() {
   // Open Form to Add a Spot from Scratch
   const openAddForm = () => {
     setEditingPlace(null);
-    setFormName('');
-    setFormDescription('');
-    setFormAddress('');
-    setFormCategory('cafe');
-    setFormEmoji('📍');
-    setFormWhyMatch('Custom hand-made itinerary spot');
+    setFormData({
+      name: '',
+      description: '',
+      address: '',
+      category: 'cafe',
+      emoji: '📍',
+      whyMatch: 'Custom hand-made itinerary spot'
+    });
     setIsFormOpen(true);
   };
 
@@ -266,18 +270,25 @@ export default function App() {
   const openEditForm = (place: Place, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setEditingPlace(place);
-    setFormName(place.name);
-    setFormDescription(place.description);
-    setFormAddress(place.address);
-    setFormCategory(place.category);
-    setFormEmoji(place.emoji);
-    setFormWhyMatch(place.whyMatch || '');
+    setFormData({
+      name: place.name,
+      description: place.description,
+      address: place.address,
+      category: place.category,
+      emoji: place.emoji,
+      whyMatch: place.whyMatch || ''
+    });
     setIsFormOpen(true);
   };
 
   // Handle Save of Custom Spot (Add/Update)
   const handleSaveCustomPlace = async () => {
-    if (!formName.trim() || !formAddress.trim()) {
+    if (!formData.name.trim()) {
+      alert("Spot name is required.");
+      return;
+    }
+    if (!formData.address.trim()) {
+      alert("Address is required for geocoding.");
       return;
     }
 
@@ -290,15 +301,15 @@ export default function App() {
 
     const newPlace: Place = {
       id: targetId,
-      name: formName.trim(),
-      description: formDescription.trim(),
-      whyMatch: formWhyMatch.trim(),
-      emoji: formEmoji.trim(),
-      address: formAddress.trim(),
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      whyMatch: formData.whyMatch.trim(),
+      emoji: formData.emoji.trim(),
+      address: formData.address.trim(),
       latitude: isEdit ? editingPlace!.latitude : baseLat,
       longitude: isEdit ? editingPlace!.longitude : baseLng,
       geocodingStatus: 'loading',
-      category: formCategory
+      category: formData.category
     };
 
     let updatedPlacesList: Place[] = [];
@@ -519,6 +530,9 @@ export default function App() {
     setActiveTab('ai');
     setMobileActiveTab('chat');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for AI
+
     try {
       // B. Post to Gemini backend
       const response = await fetch('/api/chat', {
@@ -528,8 +542,10 @@ export default function App() {
           message: textToSend,
           history: messages,
           currentLocation: currentLocation
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
@@ -564,11 +580,12 @@ export default function App() {
       }));
 
       // Update places to clear previous unless user is doing refinements
-      const isRefinementPrompt = textToSend.toLowerCase().includes('nearby') || 
-                                 textToSend.toLowerCase().includes('after') || 
-                                 textToSend.toLowerCase().includes('parks') || 
-                                 textToSend.toLowerCase().includes('and also') ||
-                                 textToSend.toLowerCase().includes('refine');
+      const refinementKeywords = [
+        'nearby', 'after', 'also', 'refine', 'more', 'another', 'additional', 'plus'
+      ];
+      const isRefinementPrompt = refinementKeywords.some(keyword =>
+        new RegExp(`\\b${keyword}\\b`, 'i').test(textToSend)
+      ) || textToSend.toLowerCase().includes('and also');
 
       let updatedPlacesList: Place[] = [];
       if (isRefinementPrompt) {
@@ -596,32 +613,41 @@ export default function App() {
 
       // E. Resolve Geocoding asynchronously & update positions gracefully
       formattedSpots.forEach(async (spot) => {
-        // Call free OSM Nominatim geocoding tool
-        const coords = await geocodeAddress(spot.address);
-        
-        setPlaces((currentList) => 
-          currentList.map((item) => {
-            if (item.id === spot.id) {
-              if (coords) {
-                return {
-                  ...item,
-                  latitude: coords.lat,
-                  longitude: coords.lng,
-                  geocodingStatus: 'success'
-                };
-              } else {
-                return {
-                  ...item,
-                  // If geocoding failed, scatter coordinates slightly around centroid for placeholder display
-                  latitude: item.latitude ? item.latitude + (Math.random() - 0.5) * 0.015 : null,
-                  longitude: item.longitude ? item.longitude + (Math.random() - 0.5) * 0.015 : null,
-                  geocodingStatus: 'error'
-                };
+        try {
+          // Call free OSM Nominatim geocoding tool
+          const coords = await geocodeAddress(spot.address);
+
+          setPlaces((currentList) =>
+            currentList.map((item) => {
+              if (item.id === spot.id) {
+                if (coords) {
+                  return {
+                    ...item,
+                    latitude: coords.lat,
+                    longitude: coords.lng,
+                    geocodingStatus: 'success'
+                  };
+                } else {
+                  return {
+                    ...item,
+                    // If geocoding failed, scatter coordinates slightly around centroid for placeholder display
+                    latitude: item.latitude ? item.latitude + (Math.random() - 0.5) * 0.015 : null,
+                    longitude: item.longitude ? item.longitude + (Math.random() - 0.5) * 0.015 : null,
+                    geocodingStatus: 'error'
+                  };
+                }
               }
-            }
-            return item;
-          })
-        );
+              return item;
+            })
+          );
+        } catch (err) {
+          console.error(`Geocoding failed for ${spot.name}:`, err);
+          setPlaces((currentList) =>
+            currentList.map((item) =>
+              item.id === spot.id ? { ...item, geocodingStatus: 'error' } : item
+            )
+          );
+        }
       });
 
     } catch (err: any) {
@@ -674,186 +700,27 @@ export default function App() {
     <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans relative">
       
       {/* 🔴 COLUMN 1: LEFT PANEL (Map Customization, POI Category Layer Filters & Saved Routes) */}
-      <aside
-        id="left-control-panel-column"
-        className={`w-full lg:w-[280px] xl:w-[320px] shrink-0 border-r border-slate-900 bg-slate-950 flex flex-col h-full overflow-hidden transition-all duration-300 relative ${
-          mobileActiveTab === 'controls' ? 'flex h-[calc(100vh-64px)]' : 'hidden lg:flex'
-        }`}
-      >
-        <div className="bg-mesh-glow" />
-        
-        {/* Panel 1 Branding Header */}
-        <header className="p-4 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md flex items-center justify-between z-10 select-none">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-indigo-800 flex items-center justify-center shadow-md">
-              <Layers className="w-4 h-4 text-indigo-200" />
-            </div>
-            <div>
-              <h2 className="font-display font-medium text-sm text-white leading-none tracking-tight">Genie Control</h2>
-              <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest font-semibold mt-0.5 block">Layers &amp; Memory</span>
-            </div>
-          </div>
-          
-          <button
-            onClick={resetSession}
-            title="Reset current session dialog & spots"
-            className="p-1 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer z-10"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </header>
-
-        {/* Scrollable controls configuration body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-5 z-10 text-left">
-          
-          {/* Visual Canvas Layers */}
-          <section className="space-y-2.5">
-            <h3 className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest font-bold select-none">
-              🌐 Map Spatial Layers
-            </h3>
-            <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-855 space-y-2.5">
-              
-              {/* Route Pathway checkbox */}
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer hover:text-white transition-linear select-none">
-                <input
-                  type="checkbox"
-                  checked={showRouteLines}
-                  onChange={(e) => setShowRouteLines(e.target.checked)}
-                  className="rounded border-slate-800 text-indigo-600 focus:ring-indigo-500 focus:outline-none h-4 w-4 bg-slate-950 cursor-pointer"
-                />
-                <span className="font-medium">Connect Path Sequences</span>
-              </label>
-
-              {/* Grid outline checkbox */}
-              <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer hover:text-white transition-linear select-none">
-                <input
-                  type="checkbox"
-                  checked={showGridLines}
-                  onChange={(e) => setShowGridLines(e.target.checked)}
-                  className="rounded border-slate-800 text-indigo-600 focus:ring-indigo-500 focus:outline-none h-4 w-4 bg-slate-950 cursor-pointer"
-                />
-                <span className="font-medium">Symmetric Science Grid</span>
-              </label>
-            </div>
-          </section>
-
-          {/* Interactive Category Filter chips */}
-          <section className="space-y-2.5">
-            <div className="flex items-center justify-between select-none">
-              <h3 className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest font-bold text-left">
-                📍 POI Semantic Filters
-              </h3>
-              <div className="flex items-center gap-2 text-[9px] font-semibold text-slate-500 font-mono">
-                <button onClick={handleSelectAllFilters} className="hover:text-indigo-400 transition-colors">Select All</button>
-                <span>|</span>
-                <button onClick={handleClearFilters} className="hover:text-amber-500 transition-colors">Clear</button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-1.5">
-              {CATEGORY_CHIPS.map((chip) => {
-                const isSelected = selectedCategories.includes(chip.id);
-                return (
-                  <button
-                    key={chip.id}
-                    onClick={() => toggleCategoryFilter(chip.id)}
-                    className={`flex items-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-medium border text-left cursor-pointer transition-all ${
-                      isSelected
-                        ? chip.color + ' border-indigo-500/40 font-bold'
-                        : 'bg-slate-900/10 border-transparent text-slate-500'
-                    }`}
-                  >
-                    <span className="text-sm shrink-0">{chip.emoji}</span>
-                    <span className="truncate">{chip.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Saved Routes and US Preset memory */}
-          <section className="space-y-3">
-            <h3 className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest font-bold select-none">
-              📁 Travel Route Storage
-            </h3>
-
-            {/* Quick preset selector */}
-            <div className="space-y-1.5 p-3 rounded-xl bg-slate-900/30 border border-slate-900">
-              <span className="text-[9px] text-slate-400 font-mono font-bold block">🇺🇸 Load Predefined State Itinerary:</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => handleLoadStatePreset("California")}
-                  className="px-2.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/40 rounded-lg text-[10px] font-bold text-indigo-100 hover:text-white transition-all shrink-0 cursor-pointer"
-                >
-                  🌴 California Route
-                </button>
-                <select
-                  value=""
-                  onChange={(e) => { e.target.value && handleLoadStatePreset(e.target.value); }}
-                  className="flex-1 bg-slate-950 text-[10px] p-1.5 rounded-lg border border-slate-800 text-slate-300 font-sans cursor-pointer focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="" disabled>Other State Preset...</option>
-                  {US_STATES_DATA.filter(s => s.name !== "California").map((s) => (
-                    <option key={s.name} value={s.name} className="bg-slate-950 text-slate-300">
-                      {s.name} ({s.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* User save control module */}
-            <div className="p-3 bg-slate-900/40 border border-slate-850 rounded-xl space-y-2">
-              <span className="text-[9px] text-indigo-300 font-mono font-bold block uppercase tracking-wider">💾 Memory Route Archiver</span>
-              
-              <div className="flex flex-col gap-1.5">
-                <input
-                  type="text"
-                  value={newRouteName}
-                  onChange={(e) => setNewRouteName(e.target.value)}
-                  placeholder="e.g. My Kyoto Sakura Trip..."
-                  disabled={places.length === 0}
-                  className="w-full bg-slate-950 text-xs p-2 rounded-lg border border-slate-800 text-white font-sans focus:outline-none focus:border-indigo-500 disabled:opacity-40"
-                />
-                <button
-                  onClick={handleSaveCurrentRoute}
-                  disabled={!newRouteName.trim() || places.length === 0}
-                  className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-xs font-bold text-white rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <Save className="w-3 h-3" />
-                  <span>Save Active Route</span>
-                </button>
-              </div>
-
-              {/* Personal saved routes list */}
-              {customSavedRoutes.length > 0 && (
-                <div className="pt-2 border-t border-slate-800 space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                  <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider block font-bold">Personal Archives ({customSavedRoutes.length}):</span>
-                  {customSavedRoutes.map((route, i) => (
-                    <div
-                      key={i}
-                      onClick={() => handleLoadSavedRoute(route)}
-                      className="group flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-900 hover:border-indigo-500/50 cursor-pointer transition-all"
-                    >
-                      <span className="text-[11px] text-slate-300 group-hover:text-indigo-200 font-medium truncate select-none">
-                        📅 {route.name}
-                      </span>
-                      <button
-                        onClick={(e) => handleDeleteSavedRoute(i, e)}
-                        className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-slate-900 cursor-pointer transition-colors"
-                        title="Delete from memory"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-        </div>
-      </aside>
+      <ControlsPanel
+        mobileActiveTab={mobileActiveTab}
+        resetSession={resetSession}
+        showRouteLines={showRouteLines}
+        setShowRouteLines={setShowRouteLines}
+        showGridLines={showGridLines}
+        setShowGridLines={setShowGridLines}
+        selectedCategories={selectedCategories}
+        toggleCategoryFilter={toggleCategoryFilter}
+        handleSelectAllFilters={handleSelectAllFilters}
+        handleClearFilters={handleClearFilters}
+        handleLoadStatePreset={handleLoadStatePreset}
+        newRouteName={newRouteName}
+        setNewRouteName={setNewRouteName}
+        places={places}
+        handleSaveCurrentRoute={handleSaveCurrentRoute}
+        customSavedRoutes={customSavedRoutes}
+        handleLoadSavedRoute={handleLoadSavedRoute}
+        handleDeleteSavedRoute={handleDeleteSavedRoute}
+        categoryChips={CATEGORY_CHIPS}
+      />
 
       {/* 🟢 COLUMN 2: CENTER PANEL (Interactive Map Center Layout with Floating Prompt Engine) */}
       <main
@@ -957,447 +824,56 @@ export default function App() {
           </div>
         )}
 
-        {/* Custom Spot Curation Form (Add / Edit) - Repositioned outside as gorgeous overlay on mobile and sleek inline container */}
-        {isFormOpen && (
-          <div className="absolute inset-x-0 bottom-0 top-[60px] bg-slate-950/98 backdrop-blur-md border-t border-indigo-500/30 p-4 space-y-4 shadow-2xl z-20 overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2 select-none">
-              <h3 className="font-display font-medium text-xs text-white flex items-center gap-1.5 font-bold">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span>{editingPlace ? `Edit Spot: ${editingPlace.name}` : 'Add Spot from Scratch'}</span>
-              </h3>
-              <button
-                onClick={() => setIsFormOpen(false)}
-                className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="space-y-3.5 text-left">
-              <div>
-                <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Spot Name *</label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. My Secret Courtyard Tea"
-                  className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white font-sans"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Category</label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => {
-                      const newCat = e.target.value;
-                      setFormCategory(newCat);
-                      const suggestedEmoji = CATEGORY_EMOJIS[newCat];
-                      if (suggestedEmoji) {
-                        setFormEmoji(suggestedEmoji);
-                      }
-                    }}
-                    className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:focus-border-indigo-500 focus:outline-none text-white font-sans"
-                  >
-                    <option value="cafe">☕ Cafe</option>
-                    <option value="restaurant">🍣 Restaurant</option>
-                    <option value="museum">🖼️ Museum</option>
-                    <option value="temple">⛩️ Temple</option>
-                    <option value="park">🌳 Park</option>
-                    <option value="scenic-overlook">🌄 Scenic Overlook</option>
-                    <option value="historic">🏰 Historic Site</option>
-                    <option value="custom">📍 Custom Spot</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Icon Emoji</label>
-                  <input
-                    type="text"
-                    value={formEmoji}
-                    onChange={(e) => setFormEmoji(e.target.value)}
-                    placeholder="e.g. 🏮"
-                    maxLength={4}
-                    className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white text-center font-sans"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Geocodable Address *</label>
-                <input
-                  type="text"
-                  value={formAddress}
-                  onChange={(e) => setFormAddress(e.target.value)}
-                  placeholder="e.g. Kyoto Tower, Shimogyo Ward, Kyoto, Japan"
-                  className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white font-sans"
-                />
-                <span className="text-[9px] text-slate-500 font-mono mt-1 block leading-snug">We'll center this leaflet marker automatically using OSM Nominatim.</span>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Description</label>
-                <textarea
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Add outstanding details, highlights, or tips..."
-                  rows={2}
-                  className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white font-sans resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-bold">Personal Note / Recommendation Vibe</label>
-                <input
-                  type="text"
-                  value={formWhyMatch}
-                  onChange={(e) => setFormWhyMatch(e.target.value)}
-                  placeholder="Why this spot belongs in your journey"
-                  className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white font-sans"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 select-none">
-              <button
-                type="button"
-                onClick={handleSaveCustomPlace}
-                disabled={!formName.trim() || !formAddress.trim()}
-                className="flex-grow py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold text-xs transition-all shadow-lg hover:shadow-indigo-600/35 cursor-pointer"
-              >
-                Save Spot
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Custom Spot Curation Form (Add / Edit) - Modularized */}
+        <ItineraryForm
+          isFormOpen={isFormOpen}
+          setIsFormOpen={setIsFormOpen}
+          editingPlace={editingPlace}
+          formData={formData}
+          setFormData={setFormData}
+          handleSaveCustomPlace={handleSaveCustomPlace}
+          categoryEmojis={CATEGORY_EMOJIS}
+        />
 
         {/* Scrollable conversation timelines */}
         <div id="sidebar-logs" className="flex-1 overflow-y-auto p-4 space-y-4 z-10">
 
           {/* TAB A: AI CHAT SIDEKICK */}
           {activeTab === 'ai' && (
-            <>
-              {/* Messages Loop */}
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-slate-400 select-none">
-                    <span>{msg.sender === 'user' ? 'You' : 'Genie Assistant'}</span>
-                    <span>•</span>
-                    <span>{msg.timestamp}</span>
-                  </div>
-                  
-                  <div
-                    className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed text-left ${
-                      msg.sender === 'user'
-                        ? 'bg-indigo-600 text-white rounded-tr-none shadow-md'
-                        : 'bg-slate-900/60 text-slate-200 border border-slate-900 rounded-tl-none font-sans'
-                    }`}
-                  >
-                    <div className="prose prose-invert prose-sm whitespace-pre-line text-slate-100">
-                      {msg.text}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Typing Loader animation */}
-              {isLoading && (
-                <div className="flex flex-col items-start select-none">
-                  <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-slate-400">
-                    <span>Map Genie</span>
-                    <span>•</span>
-                    <span>Searching...</span>
-                  </div>
-                  <div className="bg-slate-900/40 border border-slate-900 rounded-2xl rounded-tl-none px-4 py-3 flex items-center gap-3">
-                    <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                    <span className="text-[11px] text-slate-400 font-mono">Geocoding suggestions dynamically...</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Suggestions results cards inside Chat Feed */}
-              {filteredPlaces.length > 0 && (
-                <div className="pt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-[10px] font-mono text-slate-400 tracking-wider uppercase flex items-center gap-1 select-none font-bold">
-                      <Compass className="w-4 h-4 text-indigo-400" />
-                      <span>Suggested Spots ({filteredPlaces.length})</span>
-                    </h3>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {filteredPlaces.map((place, index) => {
-                      const isActive = place.id === activePlaceId;
-                      const isHovered = place.id === hoveredPlaceId;
-                      const isGeocoded = place.latitude !== null && place.longitude !== null;
-
-                      return (
-                        <div
-                          key={place.id}
-                          onClick={() => handleCardClick(place)}
-                          onMouseEnter={() => setHoveredPlaceId(place.id)}
-                          onMouseLeave={() => setHoveredPlaceId(null)}
-                          className={`group p-3 border rounded-xl cursor-pointer transition-all duration-300 text-left ${
-                            isActive
-                              ? 'border-indigo-500/80 bg-indigo-950/20 shadow-inner font-bold'
-                              : isHovered
-                              ? 'border-indigo-500/35 bg-slate-900/40 scale-[1.01]'
-                              : 'border-slate-900 bg-slate-900/10 hover:border-slate-800'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex gap-2">
-                              <span className="text-xl pt-0.5 select-none">{place.emoji || '📍'}</span>
-                              <div>
-                                <h4 className="font-display font-semibold text-xs text-white group-hover:text-indigo-300 transition-colors">
-                                  {place.name}
-                                </h4>
-                                <span className="inline-block mt-0.5 text-[8px] font-mono bg-slate-900 border border-slate-800 px-1 py-0.2 rounded text-slate-400 uppercase tracking-wider select-none font-bold">
-                                  {CATEGORY_LABELS[place.category] || place.category}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0 select-none" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={(e) => openEditForm(place, e)}
-                                className="p-1 rounded bg-slate-900 border border-slate-800 hover:border-indigo-500 text-slate-400 hover:text-white transition-all cursor-pointer"
-                                title="Edit Spot"
-                              >
-                                <Edit3 className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDeletePlace(place.id, e)}
-                                className="p-1 rounded bg-slate-900 border border-slate-800 hover:border-rose-500 text-slate-400 hover:text-rose-400 transition-all cursor-pointer"
-                                title="Delete Spot"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <p className="mt-1.5 text-[11px] text-slate-300 leading-relaxed font-sans">
-                            {place.description}
-                          </p>
-
-                          {place.whyMatch && (
-                            <div className="mt-2 text-[9px] text-indigo-200/90 bg-indigo-950/30 border border-indigo-900/40 p-2 rounded-lg font-mono leading-relaxed">
-                              <span className="font-bold text-indigo-400">Match Vibe:</span> {place.whyMatch}
-                            </div>
-                          )}
-
-                          <div className="mt-2 text-[9px] text-slate-500 font-mono flex items-center gap-1 border-t border-slate-900 pt-1.5 select-none">
-                            <MapPin className="w-3 h-3 text-slate-650" />
-                            <span className="truncate max-w-[340px]" title={place.address}>{place.address}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Starter triggers */}
-              {places.length === 0 && !isLoading && (
-                <div className="border border-slate-900 bg-slate-950/20 p-4 rounded-xl space-y-3">
-                  <h4 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-1.5 select-none font-bold">
-                    <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Starter Search Spell Prompts:</span>
-                  </h4>
-                  <div className="grid grid-cols-1 gap-1.5 text-left">
-                    {STARTER_PROMPTS.map((p) => (
-                      <button
-                        key={p.text}
-                        onClick={() => handleSendMessage(p.text)}
-                        className="flex items-center gap-2 text-left p-2.5 rounded-xl border border-slate-900 bg-slate-900/35 hover:border-slate-800 hover:bg-slate-900/60 text-slate-300 hover:text-white text-xs transition-all cursor-pointer"
-                      >
-                        <span className="text-base shrink-0">{p.icon}</span>
-                        <span className="truncate font-medium">{p.text}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+            <ChatPanel
+              messages={messages}
+              isLoading={isLoading}
+              filteredPlaces={filteredPlaces}
+              activePlaceId={activePlaceId}
+              hoveredPlaceId={hoveredPlaceId}
+              handleCardClick={handleCardClick}
+              setHoveredPlaceId={setHoveredPlaceId}
+              openEditForm={openEditForm}
+              handleDeletePlace={handleDeletePlace}
+              handleSendMessage={handleSendMessage}
+              starterPrompts={STARTER_PROMPTS}
+              categoryLabels={CATEGORY_LABELS}
+            />
           )}
 
           {/* TAB B: PLANNER WORKSPACE SEQUENCE */}
           {activeTab === 'planner' && (
-            <div className="space-y-4">
-              
-              {/* Toolbar sequential buttons */}
-              <div className="flex flex-col gap-2 border-b border-slate-900 pb-3 select-none">
-                <button
-                  type="button"
-                  onClick={openAddForm}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-indigo-500/50 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-50 hover:text-white rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Pin Manual Spot from Scratch</span>
-                </button>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleExportItinerary}
-                    disabled={places.length === 0}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 border border-emerald-500/35 bg-emerald-950/20 hover:bg-emerald-600 disabled:opacity-40 disabled:hover:bg-emerald-950/20 text-emerald-400 hover:text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer"
-                    title="Export to JSON"
-                  >
-                    <Download className="w-3 h-3 text-emerald-400" />
-                    <span>Export JSON</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateFromScratch}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 border border-slate-850 bg-slate-900/60 hover:bg-slate-900 hover:border-rose-500/40 text-slate-400 hover:text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer"
-                    title="Start fresh list"
-                  >
-                    <RotateCcw className="w-3 h-3 text-rose-500" />
-                    <span>Reset Scratch</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Itinerary steps mapping index */}
-              {filteredPlaces.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider select-none">
-                    <span>Sequential Route List</span>
-                    <span>Rearrange Node Order</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {filteredPlaces.map((place, index) => {
-                      const isActive = place.id === activePlaceId;
-                      const isHovered = place.id === hoveredPlaceId;
-                      const isFirst = index === 0;
-                      const isLast = index === filteredPlaces.length - 1;
-
-                      return (
-                        <div
-                          key={place.id}
-                          onClick={() => handleCardClick(place)}
-                          onMouseEnter={() => setHoveredPlaceId(place.id)}
-                          onMouseLeave={() => setHoveredPlaceId(null)}
-                          className={`group relative p-3 border rounded-xl cursor-pointer transition-all duration-300 text-left ${
-                            isActive
-                              ? 'border-indigo-500/80 bg-indigo-950/20 shadow-inner font-bold'
-                              : isHovered
-                              ? 'border-indigo-500/35 bg-slate-900/40 scale-[1.01]'
-                              : 'border-slate-900 bg-slate-900/10 hover:border-slate-800'
-                          }`}
-                        >
-                          {/* Sequential Badge overlay */}
-                          <div className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[9px] font-mono font-bold text-indigo-300 select-none shadow-md">
-                            {index + 1}
-                          </div>
-
-                          <div className="flex items-start justify-between gap-2 pl-2">
-                            <div className="flex gap-2">
-                              <span className="text-xl pt-0.5 select-none">{place.emoji || '📍'}</span>
-                              <div>
-                                <h4 className="font-display font-semibold text-xs text-white group-hover:text-indigo-300 transition-colors">
-                                  {place.name}
-                                </h4>
-                                <span className="inline-block mt-0.5 text-[8px] font-mono bg-slate-900 border border-slate-850 px-1 py-0.1 rounded text-slate-400 uppercase tracking-wider select-none font-bold">
-                                  {CATEGORY_LABELS[place.category] || place.category}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Move index triggers */}
-                            <div className="flex items-center gap-1 shrink-0 select-none" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={(e) => handleMovePlace(index, 'up', e)}
-                                disabled={isFirst}
-                                className="p-1 rounded bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 disabled:opacity-20 cursor-pointer transition-all"
-                                title="Move Node Up"
-                              >
-                                <ArrowUp className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={(e) => handleMovePlace(index, 'down', e)}
-                                disabled={isLast}
-                                className="p-1 rounded bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 disabled:opacity-20 cursor-pointer transition-all"
-                                title="Move Node Down"
-                              >
-                                <ArrowDown className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={(e) => openEditForm(place, e)}
-                                className="p-1 rounded bg-slate-950 border border-slate-800 hover:border-indigo-500 text-slate-400 hover:text-white cursor-pointer transition-all"
-                                title="Edit details"
-                              >
-                                <Edit3 className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDeletePlace(place.id, e)}
-                                className="p-1 rounded bg-slate-950 border border-slate-800 hover:border-rose-500 text-slate-400 hover:text-rose-400 cursor-pointer transition-all"
-                                title="Trash node"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <p className="mt-1.5 pl-2 text-[11px] text-slate-300 leading-relaxed font-sans">
-                            {place.description}
-                          </p>
-
-                          {place.whyMatch && (
-                            <div className="ml-2 mt-2 text-[9px] text-indigo-200/90 bg-indigo-950/30 border border-indigo-900/40 p-2 rounded-lg font-mono leading-relaxed">
-                              <span className="font-bold text-indigo-400">Match Vibe:</span> {place.whyMatch}
-                            </div>
-                          )}
-
-                          <div className="mt-2 ml-2 text-[9px] text-slate-500 font-mono flex items-center gap-1 border-t border-slate-900 pt-1.5 select-none">
-                            <MapPin className="w-3 h-3 text-slate-650" />
-                            <span className="truncate max-w-[340px]" title={place.address}>{place.address}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                /* Planner empty state card */
-                <div className="border border-dashed border-slate-800 bg-slate-900/10 p-6 rounded-2xl text-center space-y-4">
-                  <div className="mx-auto h-12 w-12 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xl select-none">
-                    🗺️
-                  </div>
-                  <div>
-                    <h4 className="font-display font-medium text-xs text-slate-250">Your Planner is Empty</h4>
-                    <p className="mt-1 text-[11px] text-slate-500 leading-relaxed max-w-[240px] mx-auto">
-                      Build your sequence trip! Search with AI, or manually pin your personal favorite coordinates here.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1.5 pt-2 select-none">
-                    <button
-                      onClick={openAddForm}
-                      className="py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs tracking-wide transition-all shadow-md cursor-pointer"
-                    >
-                      + Add Manual Spot from Scratch
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('ai')}
-                      className="py-2 rounded-xl bg-slate-900 border border-slate-850 text-slate-400 hover:text-white text-xs font-semibold transition-all cursor-pointer"
-                    >
-                      💬 Message AI Genie Chat
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <PlannerWorkspace
+              openAddForm={openAddForm}
+              handleExportItinerary={handleExportItinerary}
+              handleCreateFromScratch={handleCreateFromScratch}
+              places={places}
+              filteredPlaces={filteredPlaces}
+              activePlaceId={activePlaceId}
+              hoveredPlaceId={hoveredPlaceId}
+              handleCardClick={handleCardClick}
+              setHoveredPlaceId={setHoveredPlaceId}
+              handleMovePlace={handleMovePlace}
+              openEditForm={openEditForm}
+              handleDeletePlace={handleDeletePlace}
+              setActiveTab={setActiveTab}
+              categoryLabels={CATEGORY_LABELS}
+            />
           )}
           
           <div ref={chatBottomRef} />
