@@ -14,12 +14,7 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
   try {
     // Nominatim usage policy requires a descriptive User-Agent
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
-      {
-        headers: {
-          'User-Agent': 'MapGenie/1.0 (Travel Planner Application)',
-        },
-      }
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
     );
 
     if (!response.ok) {

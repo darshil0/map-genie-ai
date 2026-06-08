@@ -522,7 +522,8 @@ export default function App() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInputMessage('');
     setIsLoading(true);
 
@@ -540,7 +541,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
-          history: messages,
+          history: nextMessages,
           currentLocation: currentLocation
         }),
         signal: controller.signal
