@@ -155,18 +155,18 @@ export default function MapContainer({
           <div class="relative flex items-center justify-center">
             ${
               !isGeocoded
-                ? `<div class="absolute -inset-2 rounded-full bg-amber-500/35 blur-xs animate-pulse"></div>`
+                ? `<div class="absolute -inset-2 rounded-full bg-amber-500/35 blur-sm animate-pulse"></div>`
                 : isActive
-                ? `<div class="absolute -inset-2.5 rounded-full ${spec.pulse} blur-xs animate-ping"></div>`
+                ? `<div class="absolute -inset-2.5 rounded-full ${spec.pulse} blur-sm animate-ping"></div>`
                 : isHovered
-                ? `<div class="absolute -inset-3.5 rounded-full ${spec.pulse} blur-xs animate-pulse ring-4 ${spec.activeStroke}"></div>`
-                : `<div class="absolute -inset-1 rounded-full ${spec.glow} blur-xs"></div>`
+                ? `<div class="absolute -inset-3.5 rounded-full ${spec.pulse} blur-sm animate-pulse ring-4 ${spec.activeStroke}"></div>`
+                : `<div class="absolute -inset-1 rounded-full ${spec.glow} blur-sm"></div>`
             }
             <div class="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 shadow-md ${
               isActive
-                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-125 z-55 shadow-indigo-950/80 ring-2 ' + spec.activeStroke
+                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-125 z-50 shadow-indigo-950/80 ring-2 ' + spec.activeStroke
                 : isHovered
-                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-120 z-50 shadow-indigo-950/60'
+                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-110 z-50 shadow-indigo-950/60'
                 : !isGeocoded
                 ? 'bg-amber-950/90 border border-amber-500/50 opacity-70 scale-95'
                 : 'bg-slate-900/90 border border-white/10 hover:border-white/40 text-xl'

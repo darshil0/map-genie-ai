@@ -121,7 +121,7 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
       return {
         condition: 'Snowfall',
         themeClass: 'from-cyan-300/15 via-slate-100/10 to-transparent border-cyan-400/30 text-cyan-100',
-        icon: <CloudSnow className="w-4 h-4 text-cyan-300 animate-bounce-slow" />,
+        icon: <CloudSnow className="w-4 h-4 text-cyan-300 animate-bounce" />,
         glowColor: 'bg-cyan-200/25'
       };
     }
@@ -171,7 +171,7 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
 
       {/* Structured weather data layout */}
       {weather && dec && (
-        <div className="flex flex-col p-3 rounded-2.5xl space-y-2.5 relative overflow-hidden">
+        <div className="flex flex-col p-3 rounded-2xl space-y-2.5 relative overflow-hidden">
           {/* Accent glow halo */}
           <div className={`absolute -top-12 -right-12 h-20 w-20 rounded-full blur-3xl filter opacity-40 transition-colors duration-500 ${dec.glowColor}`} />
 
@@ -187,7 +187,7 @@ export default function WeatherWidget({ latitude, longitude, locationName }: Wea
             {/* Toggle Switch */}
             <button
               onClick={() => setIsFahrenheit(!isFahrenheit)}
-              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-950 hover:bg-indigo-650 border border-slate-800 text-indigo-300 hover:text-white transition-all duration-200 cursor-pointer"
+              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-950 hover:bg-indigo-600 border border-slate-800 text-indigo-300 hover:text-white transition-all duration-200 cursor-pointer"
               title={`Switch to ${isFahrenheit ? 'Celsius' : 'Fahrenheit'}`}
             >
               {isFahrenheit ? '°F' : '°C'}

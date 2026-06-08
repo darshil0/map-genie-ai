@@ -82,7 +82,7 @@ const ItineraryForm: React.FC<ItineraryFormProps> = ({
                 const suggestedEmoji = categoryEmojis[newCat] || formData.emoji;
                 setFormData(prev => ({ ...prev, category: newCat, emoji: suggestedEmoji }));
               }}
-              className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:focus-border-indigo-500 focus:outline-none text-white font-sans"
+              className="w-full bg-slate-950 text-xs p-2.5 rounded-lg border border-slate-800 focus:border-indigo-500 focus:outline-none text-white font-sans"
             >
               <option value="cafe">☕ Cafe</option>
               <option value="restaurant">🍣 Restaurant</option>

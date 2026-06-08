@@ -168,7 +168,7 @@ const PlannerWorkspace: React.FC<PlannerWorkspaceProps> = ({
                   )}
 
                   <div className="mt-2 ml-2 text-[9px] text-slate-500 font-mono flex items-center gap-1 border-t border-slate-900 pt-1.5 select-none">
-                    <MapPin className="w-3 h-3 text-slate-650" />
+                    <MapPin className="w-3 h-3 text-slate-400" />
                     <span className="truncate max-w-[340px]" title={place.address}>{place.address}</span>
                   </div>
                 </div>

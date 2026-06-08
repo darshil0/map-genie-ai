@@ -984,7 +984,7 @@ export default function App() {
           <Navigation className="w-4 h-4 mb-1" />
           <span className="text-[10px]">📅 Planner</span>
           {places.length > 0 && (
-            <div className="absolute top-2 right-5 bg-indigo-650 text-white border border-slate-950 font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
+            <div className="absolute top-2 right-5 bg-indigo-600 text-white border border-slate-950 font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
               {filteredPlaces.length}
             </div>
           )}
