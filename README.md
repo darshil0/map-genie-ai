@@ -16,6 +16,7 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 - **📅 Visual Itinerary & Route Planner**: Switch to the Planner Workspace tab to build, reorder, and refine your travel route manually. Draw glowing indicator lines connecting each sequential spot.
 - **🇺🇸 50 US States Curated Itineraries**: Load pre-defined, high-fidelity travel highlights for all 50 US States (featuring California upfront!) sequentially mapped with coordinates and custom suggestions in seconds.
 - **💾 Save & Share**: Export your final compiled itinerary as a neat, downloadable JSON file with one click to keep your vacation plans handy!
+- **📊 Spatial Analytics Matrix**: View live telemetry of your itinerary, including category density distributions and real-time map plot resolution rates.
 - **🦸‍♂️ Self-Healing**: Network blipped? Gemini glitched? Don't sweat it. Map-Genie is armed with robust error guards and structured fallback handlers, so your experience stays butter-smooth.
 
 ---
@@ -26,7 +27,7 @@ We’ve pieced together an incredibly robust, full-stack architecture to keep th
 
 | What it does | What powers it |
 |---|---|
-| **The Brains (AI)** | [Google Gemini](https://ai.google.dev/) (`gemini-2.5`) via our native server-side API proxy |
+| **The Brains (AI)** | [Google Gemini](https://ai.google.dev/) (`gemini-3.5-flash`) via our native server-side API proxy |
 | **The Engine (Backend)** | Custom standalone [Express](https://expressjs.com/) Server, Node.js + ESM `esbuild` pipeline |
 | **The Visuals (Frontend)** | React 19, TypeScript, and [Tailwind CSS](https://tailwindcss.com/) utilities |
 | **The Canvas (Map)** | [Leaflet.js](https://leafletjs.com/) layered over [CartoDB Dark Matter](https://carto.com/basemaps/) |
@@ -88,8 +89,16 @@ map-genie/
 │   ├── main.tsx              # 🚀 Frontend client entrypoint
 │   ├── index.css             # 💅 Global CSS & Tailwind imports
 │   ├── types.ts              # 🛡️ Shared TypeScript domain models
-│   └── components/
-│       └── MapContainer.tsx  # 🗺️ Leaflet map, marker, and route polyline overlay setup
+│   ├── components/
+│   │   ├── ChatPanel.tsx     # 💬 AI Assistant chat interface
+│   │   ├── ControlsPanel.tsx # 🎛️ Layer filters and session controls
+│   │   ├── ItineraryAnalytics.tsx # 📊 Spatial analytics and telemetry
+│   │   ├── ItineraryForm.tsx # 📝 Custom spot creation and editing
+│   │   ├── MapContainer.tsx  # 🗺️ Leaflet map, marker, and route polyline overlay setup
+│   │   ├── PlannerWorkspace.tsx # 📅 Sequential itinerary management
+│   │   └── WeatherWidget.tsx # ⚡ Real-time weather integration
+│   └── data/
+│       └── usStatesData.ts   # 🇺🇸 50 US States curated highlights
 ├── package.json              # 📦 Project manifest and commands
 └── .env.example              # 🔐 Environment template
 ```

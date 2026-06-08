@@ -4,6 +4,17 @@ All notable changes and functional updates to the **Map Genie** codebase are doc
 
 ---
 
+## [1.6.0] - 2026-06-07 (Spatial Analytics & Gemini 3.5 Upgrade)
+
+### ✨ Added
+- **Spatial Analytics Matrix Engine**:
+  - Integrated a real-time `ItineraryAnalytics` dashboard providing live telemetry on travel data.
+  - Features high-fidelity visualizations for **Category Density distribution** (cafes, restaurants, parks, etc.) and tracking of the **Active Map Plot rate** to monitor geocoding resolution status.
+- **Backend Model Advancement**:
+  - Upgraded the core AI engine to `gemini-3.5-flash` for faster processing and improved travel recommendation context.
+
+---
+
 ## [1.5.0] - 2026-06-07 (Mobile Sidebar & Curation Form Polish)
 
 ### ✨ Added
