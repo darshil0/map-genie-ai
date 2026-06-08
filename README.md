@@ -1,4 +1,4 @@
-# 🧞‍♂️ Map-Genie v1.6.0
+# 🧞‍♂️ Map-Genie v1.6.1
 **Your AI-Powered Travel Sidekick**
 
 [![Version](https://img.shields.io/badge/version-1.6.1-indigo.svg)](./CHANGELOG.md) [![Stability](https://img.shields.io/badge/stability-production-green.svg)](#validation--test-coverage) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
@@ -49,6 +49,8 @@ Ever wish you could just talk to your map and have it instantly curate the perfe
 ```bash
 # Copy the environment template
 cp .env.example .env
+# Or on Windows PowerShell:
+# Copy-Item .env.example .env
 
 # Open .env and paste your Gemini API Key
 nano .env
@@ -148,7 +150,6 @@ map-genie/
 ├── package.json                   # 📦 Dependencies & npm scripts
 ├── tsconfig.json                  # 🔧 TypeScript compiler options
 ├── vite.config.ts                 # ⚡ Vite build configuration
-├── tailwind.config.js             # 🎨 Tailwind theme customization
 ├── index.html                     # 📄 HTML entry point
 ├── .env.example                   # 🔐 Environment variable template
 └── CHANGELOG.md                   # 📜 Version history & release notes
@@ -388,4 +389,4 @@ Map-Genie is licensed under the **Apache License 2.0**. See LICENSE file for det
 
 *Built with ❤️ for explorers and wanderers. Dive in, and happy travels!*
 
-**Latest Version:** v1.6.0 | **Last Updated:** June 7, 2026 | **Status:** Production-Ready ✅
+**Latest Version:** v1.6.1 | **Last Updated:** June 8, 2026 | **Status:** Production-Ready ✅
