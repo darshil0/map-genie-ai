@@ -143,6 +143,12 @@ Always output standard JSON compliance according to the required schema. Ensure 
 
 // Start integration with Vite/Production static files
 async function startServer() {
+  // Validate required environment variables on startup
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("CRITICAL ERROR: GEMINI_API_KEY is not defined in environment variables.");
+    process.exit(1);
+  }
+
   const isProd = process.env.NODE_ENV === "production";
 
   if (!isProd) {
