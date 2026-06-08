@@ -1,7 +1,7 @@
 # 🧞‍♂️ Map-Genie v1.6.0
 **Your AI-Powered Travel Sidekick**
 
-[![Version](https://img.shields.io/badge/version-1.6.0-indigo.svg)](./CHANGELOG.md) [![Stability](https://img.shields.io/badge/stability-production-green.svg)](#validation--test-coverage) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.6.1-indigo.svg)](./CHANGELOG.md) [![Stability](https://img.shields.io/badge/stability-production-green.svg)](#validation--test-coverage) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
 Ever wish you could just talk to your map and have it instantly curate the perfect itinerary? **Map-Genie** turns your voice or text into a beautifully mapped visual guide. Whether you're hunting for *"cozy coffee shops in Amsterdam"* or *"hidden temples near Kyoto"*, Map-Genie figures out exactly what you want and maps it for you locally in real-time.
 
