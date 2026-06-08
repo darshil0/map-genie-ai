@@ -6,6 +6,22 @@ All notable changes and functional updates to the **Map Genie** codebase are doc
 
 ---
 
+## [1.6.1] - 2026-06-08 (Package Cleanup & Tailwind Fixes)
+
+### 🔄 Changed
+- Cleaned up package metadata and dependency classifications:
+  - removed unused `motion` dependency.
+  - moved `@tailwindcss/vite` and `@vitejs/plugin-react` into `devDependencies`.
+  - aligned package metadata versioning with the codebase.
+- Corrected invalid Tailwind utility classes across multiple components to ensure build compatibility and stable styling.
+- Updated `package-lock.json` to reflect the cleaned package dependency tree.
+
+### 🛡️ Fixed/Hardened
+- Fixed invalid class names in `ItineraryForm.tsx`, `ChatPanel.tsx`, `PlannerWorkspace.tsx`, `WeatherWidget.tsx`, `App.tsx`, and `MapContainer.tsx`.
+- Improved repository stability by resolving branch integration conflicts and ensuring the project can be pushed cleanly.
+
+---
+
 ## [1.6.0] - 2026-06-07 (Stability Hardening & Performance Optimization)
 
 ### ✨ Added
