@@ -22,6 +22,7 @@ All notable changes and functional updates to the **Map Genie** codebase are doc
 - Removed unsupported browser `User-Agent` header from the Nominatim geocoder request.
 - Enabled browser geolocation to seed the initial map context when users allow location access.
 - Switched Gemini-derived place geocoding to sequential Nominatim requests so the app respects rate limiting and avoids rapid burst queries.
+- Removed stale `framer-motion` / `motion` entries from `package-lock.json` to keep the lockfile aligned with `package.json`.
 - Improved repository stability by resolving branch integration conflicts and ensuring the project can be pushed cleanly.
 
 ---
@@ -210,4 +211,4 @@ All notable changes and functional updates to the **Map Genie** codebase are doc
 
 ---
 
-**Last Updated:** June 7, 2026 | **Maintenance Mode:** Stable | **Next Major:** v2.0 (AI Search Grounding + Multi-turn Planning)
+**Last Updated:** June 8, 2026 | **Maintenance Mode:** Stable | **Next Major:** v2.0 (AI Search Grounding + Multi-turn Planning)
