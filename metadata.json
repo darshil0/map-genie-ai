@@ -1,0 +1,6 @@
+{
+  "name": "Map Genie",
+  "description": "An AI travel sidekick that turns your typed or spoken ideas into points on a gorgeous dark map, allowing seamless follow-up chat refinements.",
+  "requestFramePermissions": ["microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
