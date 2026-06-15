@@ -10,9 +10,25 @@ import {
   Mic,
   MicOff,
   Compass,
+  MapPin,
+  Map as MapIcon,
+  RotateCcw,
   Navigation,
+  Loader2,
   Info,
+  BookOpen,
+  Plus,
+  Trash2,
+  Edit3,
+  ArrowUp,
+  ArrowDown,
+  X,
+  Download,
   Layers,
+  Save,
+  Check,
+  PlusCircle,
+  HelpCircle,
   MessageSquare
 } from 'lucide-react';
 import { Place, Message, MapLocation } from './types';
@@ -20,12 +36,6 @@ import MapContainer from './components/MapContainer';
 import ItineraryAnalytics from './components/ItineraryAnalytics';
 import { geocodeAddress } from './utils/geocoder';
 import { US_STATES_DATA } from './data/usStatesData';
-
-// Modular components
-import ControlsPanel from './components/ControlsPanel';
-import ItineraryForm from './components/ItineraryForm';
-import ChatPanel from './components/ChatPanel';
-import PlannerWorkspace from './components/PlannerWorkspace';
 
 const STARTER_PROMPTS = [
   { text: 'Cozy coffee shops in Amsterdam', icon: '☕' },
@@ -57,14 +67,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_CHIPS = [
-  { id: 'cafe', label: 'Cafes', emoji: '☕', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 hover:border-indigo-500/45' },
-  { id: 'restaurant', label: 'Dining', emoji: '🍣', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 hover:border-rose-500/45' },
-  { id: 'museum', label: 'Museums', emoji: '🖼️', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:border-purple-500/45' },
-  { id: 'temple', label: 'Temples', emoji: '⛩️', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:border-amber-500/45' },
-  { id: 'park', label: 'Parks', emoji: '🌳', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/45' },
-  { id: 'scenic-overlook', label: 'Vistas', emoji: '🌄', color: 'text-sky-400 bg-sky-500/10 border-sky-500/20 hover:border-sky-400/45' },
-  { id: 'historic', label: 'Historic', emoji: '🏰', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20 hover:border-yellow-400/45' },
-  { id: 'custom', label: 'Custom Pins', emoji: '📍', color: 'text-slate-400 bg-slate-500/10 border-slate-500/20 hover:border-slate-550/45' },
+  { id: 'cafe', label: 'Cafes', emoji: '☕', color: 'text-indigo-700 bg-indigo-50 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-100/60 font-medium' },
+  { id: 'restaurant', label: 'Dining', emoji: '🍣', color: 'text-rose-700 bg-rose-50 border-rose-200 hover:border-rose-400 hover:bg-rose-100/60 font-medium' },
+  { id: 'museum', label: 'Museums', emoji: '🖼️', color: 'text-purple-700 bg-purple-50 border-purple-200 hover:border-purple-400 hover:bg-purple-100/60 font-medium' },
+  { id: 'temple', label: 'Temples', emoji: '⛩️', color: 'text-amber-805 bg-amber-50 border-amber-200 hover:border-amber-400 hover:bg-amber-100/60 font-medium' },
+  { id: 'park', label: 'Parks', emoji: '🌳', color: 'text-emerald-800 bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100/60 font-medium' },
+  { id: 'scenic-overlook', label: 'Vistas', emoji: '🌄', color: 'text-sky-700 bg-sky-50 border-sky-200 hover:border-sky-400 hover:bg-sky-100/60 font-medium' },
+  { id: 'historic', label: 'Historic', emoji: '🏰', color: 'text-yellow-850 bg-yellow-50 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-105/60 font-medium' },
+  { id: 'custom', label: 'Custom Pins', emoji: '📍', color: 'text-slate-800 bg-slate-100 border-slate-300 hover:border-slate-400 hover:bg-slate-200/60 font-medium' },
 ];
 
 export default function App() {
@@ -96,14 +106,12 @@ export default function App() {
   const [newRouteName, setNewRouteName] = useState('');
 
   // Form Fields
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    address: '',
-    category: 'cafe',
-    emoji: '📍',
-    whyMatch: ''
-  });
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formAddress, setFormAddress] = useState('');
+  const [formCategory, setFormCategory] = useState('cafe');
+  const [formEmoji, setFormEmoji] = useState('📍');
+  const [formWhyMatch, setFormWhyMatch] = useState('');
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -116,17 +124,13 @@ export default function App() {
     const savedCustomRoutes = localStorage.getItem('map_genie_custom_saved_routes');
 
     if (savedCustomRoutes) {
-      try { restoreSavedRoutes(JSON.parse(savedCustomRoutes)); } catch (_) {}
+      try { combackSavedRoutes(JSON.parse(savedCustomRoutes)); } catch (_) {}
     }
 
     if (savedMessages && savedPlaces && savedLocation) {
-      try {
-        setMessages(JSON.parse(savedMessages));
-        setPlaces(JSON.parse(savedPlaces));
-        setCurrentLocation(JSON.parse(savedLocation));
-      } catch (err) {
-        console.error("Failed to parse saved session from localStorage:", err);
-      }
+      setMessages(JSON.parse(savedMessages));
+      setPlaces(JSON.parse(savedPlaces));
+      setCurrentLocation(JSON.parse(savedLocation));
     } else {
       // Welcome Intro
       const welcomeMsg: Message = {
@@ -151,7 +155,7 @@ export default function App() {
   }, []);
 
   // Helper because variable hoist
-  const restoreSavedRoutes = (parsed: any[]) => {
+  const combackSavedRoutes = (parsed: any[]) => {
     setCustomSavedRoutes(parsed);
   };
 
@@ -206,12 +210,6 @@ export default function App() {
 
       recognitionRef.current = rec;
     }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   // Toggle voice recognition
@@ -255,14 +253,12 @@ export default function App() {
   // Open Form to Add a Spot from Scratch
   const openAddForm = () => {
     setEditingPlace(null);
-    setFormData({
-      name: '',
-      description: '',
-      address: '',
-      category: 'cafe',
-      emoji: '📍',
-      whyMatch: 'Custom hand-made itinerary spot'
-    });
+    setFormName('');
+    setFormDescription('');
+    setFormAddress('');
+    setFormCategory('cafe');
+    setFormEmoji('📍');
+    setFormWhyMatch('Custom hand-made itinerary spot');
     setIsFormOpen(true);
   };
 
@@ -270,25 +266,18 @@ export default function App() {
   const openEditForm = (place: Place, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setEditingPlace(place);
-    setFormData({
-      name: place.name,
-      description: place.description,
-      address: place.address,
-      category: place.category,
-      emoji: place.emoji,
-      whyMatch: place.whyMatch || ''
-    });
+    setFormName(place.name);
+    setFormDescription(place.description);
+    setFormAddress(place.address);
+    setFormCategory(place.category);
+    setFormEmoji(place.emoji);
+    setFormWhyMatch(place.whyMatch || '');
     setIsFormOpen(true);
   };
 
   // Handle Save of Custom Spot (Add/Update)
   const handleSaveCustomPlace = async () => {
-    if (!formData.name.trim()) {
-      alert("Spot name is required.");
-      return;
-    }
-    if (!formData.address.trim()) {
-      alert("Address is required for geocoding.");
+    if (!formName.trim() || !formAddress.trim()) {
       return;
     }
 
@@ -301,15 +290,15 @@ export default function App() {
 
     const newPlace: Place = {
       id: targetId,
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      whyMatch: formData.whyMatch.trim(),
-      emoji: formData.emoji.trim(),
-      address: formData.address.trim(),
+      name: formName.trim(),
+      description: formDescription.trim(),
+      whyMatch: formWhyMatch.trim(),
+      emoji: formEmoji.trim(),
+      address: formAddress.trim(),
       latitude: isEdit ? editingPlace!.latitude : baseLat,
       longitude: isEdit ? editingPlace!.longitude : baseLng,
       geocodingStatus: 'loading',
-      category: formData.category
+      category: formCategory
     };
 
     let updatedPlacesList: Place[] = [];
@@ -530,9 +519,6 @@ export default function App() {
     setActiveTab('ai');
     setMobileActiveTab('chat');
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for AI
-
     try {
       // B. Post to Gemini backend
       const response = await fetch('/api/chat', {
@@ -542,10 +528,8 @@ export default function App() {
           message: textToSend,
           history: messages,
           currentLocation: currentLocation
-        }),
-        signal: controller.signal
+        })
       });
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
@@ -580,12 +564,11 @@ export default function App() {
       }));
 
       // Update places to clear previous unless user is doing refinements
-      const refinementKeywords = [
-        'nearby', 'after', 'also', 'refine', 'more', 'another', 'additional', 'plus'
-      ];
-      const isRefinementPrompt = refinementKeywords.some(keyword =>
-        new RegExp(`\\b${keyword}\\b`, 'i').test(textToSend)
-      ) || textToSend.toLowerCase().includes('and also');
+      const isRefinementPrompt = textToSend.toLowerCase().includes('nearby') || 
+                                 textToSend.toLowerCase().includes('after') || 
+                                 textToSend.toLowerCase().includes('parks') || 
+                                 textToSend.toLowerCase().includes('and also') ||
+                                 textToSend.toLowerCase().includes('refine');
 
       let updatedPlacesList: Place[] = [];
       if (isRefinementPrompt) {
@@ -613,41 +596,32 @@ export default function App() {
 
       // E. Resolve Geocoding asynchronously & update positions gracefully
       formattedSpots.forEach(async (spot) => {
-        try {
-          // Call free OSM Nominatim geocoding tool
-          const coords = await geocodeAddress(spot.address);
-
-          setPlaces((currentList) =>
-            currentList.map((item) => {
-              if (item.id === spot.id) {
-                if (coords) {
-                  return {
-                    ...item,
-                    latitude: coords.lat,
-                    longitude: coords.lng,
-                    geocodingStatus: 'success'
-                  };
-                } else {
-                  return {
-                    ...item,
-                    // If geocoding failed, scatter coordinates slightly around centroid for placeholder display
-                    latitude: item.latitude ? item.latitude + (Math.random() - 0.5) * 0.015 : null,
-                    longitude: item.longitude ? item.longitude + (Math.random() - 0.5) * 0.015 : null,
-                    geocodingStatus: 'error'
-                  };
-                }
+        // Call free OSM Nominatim geocoding tool
+        const coords = await geocodeAddress(spot.address);
+        
+        setPlaces((currentList) => 
+          currentList.map((item) => {
+            if (item.id === spot.id) {
+              if (coords) {
+                return {
+                  ...item,
+                  latitude: coords.lat,
+                  longitude: coords.lng,
+                  geocodingStatus: 'success'
+                };
+              } else {
+                return {
+                  ...item,
+                  // If geocoding failed, scatter coordinates slightly around centroid for placeholder display
+                  latitude: item.latitude ? item.latitude + (Math.random() - 0.5) * 0.015 : null,
+                  longitude: item.longitude ? item.longitude + (Math.random() - 0.5) * 0.015 : null,
+                  geocodingStatus: 'error'
+                };
               }
-              return item;
-            })
-          );
-        } catch (err) {
-          console.error(`Geocoding failed for ${spot.name}:`, err);
-          setPlaces((currentList) =>
-            currentList.map((item) =>
-              item.id === spot.id ? { ...item, geocodingStatus: 'error' } : item
-            )
-          );
-        }
+            }
+            return item;
+          })
+        );
       });
 
     } catch (err: any) {
@@ -697,30 +671,189 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans relative">
+    <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-[var(--bg)] text-[var(--text)] font-sans relative">
       
       {/* 🔴 COLUMN 1: LEFT PANEL (Map Customization, POI Category Layer Filters & Saved Routes) */}
-      <ControlsPanel
-        mobileActiveTab={mobileActiveTab}
-        resetSession={resetSession}
-        showRouteLines={showRouteLines}
-        setShowRouteLines={setShowRouteLines}
-        showGridLines={showGridLines}
-        setShowGridLines={setShowGridLines}
-        selectedCategories={selectedCategories}
-        toggleCategoryFilter={toggleCategoryFilter}
-        handleSelectAllFilters={handleSelectAllFilters}
-        handleClearFilters={handleClearFilters}
-        handleLoadStatePreset={handleLoadStatePreset}
-        newRouteName={newRouteName}
-        setNewRouteName={setNewRouteName}
-        places={places}
-        handleSaveCurrentRoute={handleSaveCurrentRoute}
-        customSavedRoutes={customSavedRoutes}
-        handleLoadSavedRoute={handleLoadSavedRoute}
-        handleDeleteSavedRoute={handleDeleteSavedRoute}
-        categoryChips={CATEGORY_CHIPS}
-      />
+      <aside
+        id="left-control-panel-column"
+        className={`w-full lg:w-[280px] xl:w-[320px] shrink-0 border-r border-[var(--border)] bg-[var(--surface-blur)] flex flex-col h-full overflow-hidden transition-all duration-300 relative ${
+          mobileActiveTab === 'controls' ? 'flex h-[calc(100vh-64px)]' : 'hidden lg:flex'
+        }`}
+      >
+        <div className="bg-mesh-glow" />
+        
+        {/* Panel 1 Branding Header */}
+        <header className="p-4 border-b border-[var(--border)] bg-[var(--surface-blur)] backdrop-blur-md flex items-center justify-between z-10 select-none">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md">
+              <Layers className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-sm text-[var(--text)] leading-none tracking-tight">Genie Control</h2>
+              <span className="text-[9px] font-mono text-indigo-700 uppercase tracking-widest font-bold mt-0.5 block">Layers &amp; Memory</span>
+            </div>
+          </div>
+          
+          <button
+            onClick={resetSession}
+            title="Reset current session dialog & spots"
+            className="p-1 rounded-lg border border-[var(--border)] bg-[var(--surface2)] hover:bg-slate-200 text-[var(--text-muted)] hover:text-[var(--text)] transition-all cursor-pointer z-10"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </header>
+
+        {/* Scrollable Side column section contents */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5 z-10 text-left">
+
+          {/* Visual Canvas Layers */}
+          <section className="space-y-2.5">
+            <h3 className="text-[10px] font-mono text-indigo-700 uppercase tracking-widest font-bold select-none">
+              🌐 Map Spatial Layers
+            </h3>
+            <div className="p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5">
+              
+              {/* Route Pathway checkbox */}
+              <label className="flex items-center gap-2.5 text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text)] transition-linear select-none">
+                <input
+                  type="checkbox"
+                  checked={showRouteLines}
+                  onChange={(e) => setShowRouteLines(e.target.checked)}
+                  className="rounded border-[var(--border)] text-indigo-600 focus:ring-indigo-500 focus:outline-none h-4 w-4 bg-white cursor-pointer"
+                />
+                <span className="font-medium">Connect Path Sequences</span>
+              </label>
+ 
+              {/* Grid outline checkbox */}
+              <label className="flex items-center gap-2.5 text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text)] transition-linear select-none">
+                <input
+                  type="checkbox"
+                  checked={showGridLines}
+                  onChange={(e) => setShowGridLines(e.target.checked)}
+                  className="rounded border-[var(--border)] text-indigo-600 focus:ring-indigo-500 focus:outline-none h-4 w-4 bg-white cursor-pointer"
+                />
+                <span className="font-medium">Symmetric Science Grid</span>
+              </label>
+            </div>
+          </section>
+
+          {/* Interactive Category Filter chips */}
+          <section className="space-y-2.5">
+            <div className="flex items-center justify-between select-none">
+              <h3 className="text-[10px] font-mono text-indigo-700 uppercase tracking-widest font-bold text-left">
+                📍 POI Semantic Filters
+              </h3>
+              <div className="flex items-center gap-2 text-[9px] font-semibold text-[var(--text-muted)] font-mono">
+                <button onClick={handleSelectAllFilters} className="hover:text-indigo-705 transition-colors font-bold">Select All</button>
+                <span>|</span>
+                <button onClick={handleClearFilters} className="hover:text-amber-705 transition-colors font-bold">Clear</button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-1.5">
+              {CATEGORY_CHIPS.map((chip) => {
+                const isSelected = selectedCategories.includes(chip.id);
+                return (
+                  <button
+                    key={chip.id}
+                    onClick={() => toggleCategoryFilter(chip.id)}
+                    className={`flex items-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-medium border text-left cursor-pointer transition-all ${
+                      isSelected
+                        ? chip.color + ' border-indigo-500/40 font-bold'
+                        : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--text-muted)] hover:border-slate-400'
+                    }`}
+                  >
+                    <span className="text-sm shrink-0">{chip.emoji}</span>
+                    <span className="truncate">{chip.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Saved Routes and US Preset memory */}
+          <section className="space-y-3">
+            <h3 className="text-[10px] font-mono text-indigo-700 uppercase tracking-widest font-bold select-none">
+              📁 Travel Route Storage
+            </h3>
+
+            {/* Quick preset selector */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)]">
+              <span className="text-[9px] text-[var(--text-muted)] font-mono font-bold block">🇺🇸 Load Predefined State Itinerary:</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => handleLoadStatePreset("California")}
+                  className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 border border-indigo-400 rounded-lg text-[10px] font-bold text-indigo-800 hover:text-white transition-all shrink-0 cursor-pointer"
+                >
+                  🌴 California Route
+                </button>
+                <select
+                  value=""
+                  onChange={(e) => { e.target.value && handleLoadStatePreset(e.target.value); }}
+                  className="flex-1 bg-[var(--bg)] text-[10px] p-1.5 rounded-lg border border-[var(--border)] text-[var(--text)] font-sans cursor-pointer focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="" disabled>Other State Preset...</option>
+                  {US_STATES_DATA.filter(s => s.name !== "California").map((s) => (
+                    <option key={s.name} value={s.name} className="bg-[var(--bg)] text-[var(--text)]">
+                      {s.name} ({s.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* User save control module */}
+            <div className="p-3 bg-[var(--surface2)] border border-[var(--border)] rounded-xl space-y-2">
+              <span className="text-[9px] text-indigo-700 font-mono font-bold block uppercase tracking-wider">💾 Memory Route Archiver</span>
+              
+              <div className="flex flex-col gap-1.5">
+                <input
+                  type="text"
+                  value={newRouteName}
+                  onChange={(e) => setNewRouteName(e.target.value)}
+                  placeholder="e.g. My Kyoto Sakura Trip..."
+                  disabled={places.length === 0}
+                  className="w-full bg-[var(--bg)] text-xs p-2 rounded-lg border border-[var(--border)] text-[var(--text)] font-sans focus:outline-none focus:border-indigo-600 disabled:opacity-40"
+                />
+                <button
+                  onClick={handleSaveCurrentRoute}
+                  disabled={!newRouteName.trim() || places.length === 0}
+                  className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-xs font-bold text-white rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Save className="w-3 h-3" />
+                  <span>Save Active Route</span>
+                </button>
+              </div>
+
+              {/* Personal saved routes list */}
+              {customSavedRoutes.length > 0 && (
+                <div className="pt-2 border-t border-[var(--border)] space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                  <span className="text-[9px] text-[var(--text-muted)] font-mono uppercase tracking-wider block font-bold">Personal Archives ({customSavedRoutes.length}):</span>
+                  {customSavedRoutes.map((route, i) => (
+                    <div
+                      key={i}
+                      onClick={() => handleLoadSavedRoute(route)}
+                      className="group flex items-center justify-between p-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-500 cursor-pointer transition-all"
+                    >
+                      <span className="text-[11px] text-[var(--text-muted)] group-hover:text-indigo-700 font-medium truncate select-none">
+                        📅 {route.name}
+                      </span>
+                      <button
+                        onClick={(e) => handleDeleteSavedRoute(i, e)}
+                        className="p-1 rounded text-[var(--text-muted)] hover:text-rose-650 hover:bg-rose-50 cursor-pointer transition-colors"
+                        title="Delete from memory"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+        </div>
+      </aside>
 
       {/* 🟢 COLUMN 2: CENTER PANEL (Interactive Map Center Layout with Floating Prompt Engine) */}
       <main
@@ -742,15 +875,15 @@ export default function App() {
 
         {/* FLOATING AI PROMPT ENGINE AT THE BOTTOM */}
         <div className="absolute bottom-6 inset-x-4 max-w-lg mx-auto z-30 select-none pb-4 md:pb-0">
-          <div className="w-full bg-slate-950/92 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-2xl transition-all">
+          <div className="w-full bg-[var(--surface-blur)] backdrop-blur-md border border-[var(--border)] rounded-2xl p-2 flex items-center gap-2 shadow-2xl transition-all">
             {/* Custom browser-microphone voice input */}
             <button
               onClick={toggleListening}
               type="button"
               className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
                 isListening
-                  ? 'bg-rose-600 border-rose-500 text-white shadow-lg shadow-rose-950/50 animate-pulse'
-                  : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-white hover:border-slate-700'
+                  ? 'bg-rose-650 border-rose-600 text-white shadow-lg animate-pulse'
+                  : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600 hover:border-indigo-300'
               }`}
               title={isListening ? 'Click to stop listening' : 'Speak into search'}
             >
@@ -768,12 +901,12 @@ export default function App() {
                   if (e.key === 'Enter') handleSendMessage();
                 }}
                 placeholder={isListening ? "Listening closely... Speak now!" : "Search places (e.g. scenic vistas Mallorca)..."}
-                className="w-full bg-slate-900 border border-slate-800 text-xs py-2.5 pl-3 pr-9 rounded-xl focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500 disabled:opacity-50 text-white"
+                className="w-full bg-[var(--bg)] border border-[var(--border)] text-xs py-2.5 pl-3 pr-9 rounded-xl focus:outline-none focus:border-indigo-600 transition-all placeholder:text-[var(--text-muted)] disabled:opacity-50 text-[var(--text)] font-semibold"
               />
               <button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !inputMessage.trim()}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-600 transition-all cursor-pointer"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-650 hover:bg-indigo-600 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-500 transition-all cursor-pointer"
               >
                 <Send className="w-3 h-3" />
               </button>
@@ -785,20 +918,20 @@ export default function App() {
       {/* 🔵 COLUMN 3: RIGHT PANEL (AI Chat Assistant & Dynamic Telemetry Stats Rail) */}
       <section
         id="right-assistant-panel-column"
-        className={`w-full lg:w-[420px] xl:w-[460px] shrink-0 border-l border-slate-900 bg-slate-950/98 flex flex-col h-full overflow-hidden relative ${
+        className={`w-full lg:w-[420px] xl:w-[460px] shrink-0 border-l border-[var(--border)] bg-[var(--surface-blur)] flex flex-col h-full overflow-hidden relative ${
           mobileActiveTab === 'chat' || mobileActiveTab === 'itinerary' ? 'flex h-[calc(100vh-64px)]' : 'hidden lg:flex'
         }`}
       >
         <div className="bg-mesh-glow" />
 
         {/* Dual action Tabs defining Assistant vs Planner */}
-        <div className="flex border-b border-slate-900 bg-slate-950/40 backdrop-blur-sm p-3 gap-2 select-none z-10">
+        <div className="flex border-b border-[var(--border)] bg-[var(--surface2)]/40 backdrop-blur-sm p-3 gap-2 select-none z-10">
           <button
             onClick={() => { setActiveTab('ai'); setIsFormOpen(false); }}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border btn-tab cursor-pointer ${
               activeTab === 'ai'
-                ? 'btn-tab-active border-indigo-500/50 text-indigo-100'
-                : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+                ? 'btn-tab-active border-indigo-500/50 text-indigo-800'
+                : 'bg-transparent border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface2)]'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -808,8 +941,8 @@ export default function App() {
             onClick={() => setActiveTab('planner')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border btn-tab cursor-pointer ${
               activeTab === 'planner'
-                ? 'btn-tab-active border-indigo-500/50 text-indigo-100'
-                : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+                ? 'btn-tab-active border-indigo-500/50 text-indigo-800'
+                : 'bg-transparent border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface2)]'
             }`}
           >
             <Navigation className="w-3.5 h-3.5" />
@@ -819,70 +952,459 @@ export default function App() {
 
         {/* REAL-TIME DYNAMIC METRICS OVERVIEW CARD */}
         {places.length > 0 && (
-          <div className="px-4 pt-1 pb-3 border-b border-slate-900 bg-slate-950/80 backdrop-blur-sm z-10 shrink-0">
+          <div className="px-4 pt-1 pb-3 border-b border-[var(--border)] bg-[var(--surface2)]/80 backdrop-blur-sm z-10 shrink-0">
             <ItineraryAnalytics places={filteredPlaces} />
           </div>
         )}
 
-        {/* Custom Spot Curation Form (Add / Edit) - Modularized */}
-        <ItineraryForm
-          isFormOpen={isFormOpen}
-          setIsFormOpen={setIsFormOpen}
-          editingPlace={editingPlace}
-          formData={formData}
-          setFormData={setFormData}
-          handleSaveCustomPlace={handleSaveCustomPlace}
-          categoryEmojis={CATEGORY_EMOJIS}
-        />
+        {/* Custom Spot Curation Form (Add / Edit) - Repositioned outside as gorgeous overlay on mobile and sleek inline container */}
+        {isFormOpen && (
+          <div className="absolute inset-x-0 bottom-0 top-[60px] bg-[var(--surface-blur)] backdrop-blur-md border-t border-[var(--border)] p-4 space-y-4 shadow-2xl z-20 overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-2 select-none">
+              <h3 className="font-display font-bold text-xs text-[var(--text)] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span>{editingPlace ? `Edit Spot: ${editingPlace.name}` : 'Add Spot from Scratch'}</span>
+              </h3>
+              <button
+                onClick={() => setIsFormOpen(false)}
+                className="p-1 rounded-md hover:bg-slate-200 text-[var(--text-muted)] hover:text-[var(--text)] transition-all cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
+            <div className="space-y-3.5 text-left">
+              <div>
+                <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Spot Name *</label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. My Secret Courtyard Tea"
+                  className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Category</label>
+                  <select
+                    value={formCategory}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setFormCategory(newCat);
+                      const suggestedEmoji = CATEGORY_EMOJIS[newCat];
+                      if (suggestedEmoji) {
+                        setFormEmoji(suggestedEmoji);
+                      }
+                    }}
+                    className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:focus-border-indigo-500 focus:outline-none text-[var(--text)] font-sans"
+                  >
+                    <option value="cafe">☕ Cafe</option>
+                    <option value="restaurant">🍣 Restaurant</option>
+                    <option value="museum">🖼️ Museum</option>
+                    <option value="temple">⛩️ Temple</option>
+                    <option value="park">🌳 Park</option>
+                    <option value="scenic-overlook">🌄 Scenic Overlook</option>
+                    <option value="historic">🏰 Historic Site</option>
+                    <option value="custom">📍 Custom Spot</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Icon Emoji</label>
+                  <input
+                    type="text"
+                    value={formEmoji}
+                    onChange={(e) => setFormEmoji(e.target.value)}
+                    placeholder="e.g. 🏮"
+                    maxLength={4}
+                    className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] text-center font-sans"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Geocodable Address *</label>
+                <input
+                  type="text"
+                  value={formAddress}
+                  onChange={(e) => setFormAddress(e.target.value)}
+                  placeholder="e.g. Kyoto Tower, Shimogyo Ward, Kyoto, Japan"
+                  className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
+                />
+                <span className="text-[9px] text-[var(--text-muted)] font-mono mt-1 block leading-snug font-bold">We'll center this leaflet marker automatically using OSM Nominatim.</span>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Description</label>
+                <textarea
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="Add outstanding details, highlights, or tips..."
+                  rows={2}
+                  className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider mb-1 font-bold">Personal Note / Recommendation Vibe</label>
+                <input
+                  type="text"
+                  value={formWhyMatch}
+                  onChange={(e) => setFormWhyMatch(e.target.value)}
+                  placeholder="Why this spot belongs in your journey"
+                  className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 select-none">
+              <button
+                type="button"
+                onClick={handleSaveCustomPlace}
+                disabled={!formName.trim() || !formAddress.trim()}
+                className="flex-grow py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold text-xs transition-all shadow-lg hover:shadow-indigo-600/35 cursor-pointer"
+              >
+                Save Spot
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(false)}
+                className="flex-1 py-2 rounded-xl bg-[var(--surface2)] hover:bg-slate-200 text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-xs transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         {/* Scrollable conversation timelines */}
         <div id="sidebar-logs" className="flex-1 overflow-y-auto p-4 space-y-4 z-10">
 
-          {/* TAB A: AI CHAT SIDEKICK */}
           {activeTab === 'ai' && (
-            <ChatPanel
-              messages={messages}
-              isLoading={isLoading}
-              filteredPlaces={filteredPlaces}
-              activePlaceId={activePlaceId}
-              hoveredPlaceId={hoveredPlaceId}
-              handleCardClick={handleCardClick}
-              setHoveredPlaceId={setHoveredPlaceId}
-              openEditForm={openEditForm}
-              handleDeletePlace={handleDeletePlace}
-              handleSendMessage={handleSendMessage}
-              starterPrompts={STARTER_PROMPTS}
-              categoryLabels={CATEGORY_LABELS}
-            />
+            <>
+              {/* Messages Loop */}
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-[var(--text-muted)] select-none font-bold">
+                    <span>{msg.sender === 'user' ? 'You' : 'Genie Assistant'}</span>
+                    <span>•</span>
+                    <span>{msg.timestamp}</span>
+                  </div>
+                  
+                  <div
+                    className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed text-left ${
+                      msg.sender === 'user'
+                        ? 'bg-indigo-650 text-white rounded-tr-none shadow-md'
+                        : 'bg-[var(--surface2)] text-[var(--text)] border border-[var(--border)] rounded-tl-none font-sans'
+                    }`}
+                  >
+                    <div className="prose prose-sm whitespace-pre-line text-[var(--text)] font-medium">
+                      {msg.text}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Typing Loader animation */}
+              {isLoading && (
+                <div className="flex flex-col items-start select-none">
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-[var(--text-muted)]">
+                    <span>Map Genie</span>
+                    <span>•</span>
+                    <span>Searching...</span>
+                  </div>
+                  <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-2xl rounded-tl-none px-4 py-3 flex items-center gap-3">
+                    <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+                    <span className="text-[11px] text-[var(--text-muted)] font-mono font-bold">Geocoding suggestions dynamically...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Suggestions results cards inside Chat Feed */}
+              {filteredPlaces.length > 0 && (
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-[10px] font-mono text-[var(--text-muted)] tracking-wider uppercase flex items-center gap-1 select-none font-bold">
+                      <Compass className="w-4 h-4 text-indigo-600" />
+                      <span>Suggested Spots ({filteredPlaces.length})</span>
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {filteredPlaces.map((place, index) => {
+                      const isActive = place.id === activePlaceId;
+                      const isHovered = place.id === hoveredPlaceId;
+                      const isGeocoded = place.latitude !== null && place.longitude !== null;
+
+                      return (
+                        <div
+                          key={place.id}
+                          onClick={() => handleCardClick(place)}
+                          onMouseEnter={() => setHoveredPlaceId(place.id)}
+                          onMouseLeave={() => setHoveredPlaceId(null)}
+                          className={`group p-3 border rounded-xl cursor-pointer transition-all duration-300 text-left ${
+                            isActive
+                              ? 'border-indigo-600 bg-indigo-50/70 shadow-inner font-bold'
+                              : isHovered
+                              ? 'border-indigo-400 bg-indigo-50/30 scale-[1.01]'
+                              : 'border-[var(--border)] bg-[var(--surface2)] hover:border-[var(--accent2)]'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex gap-2">
+                              <span className="text-xl pt-0.5 select-none">{place.emoji || '📍'}</span>
+                              <div>
+                                <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-700 transition-colors">
+                                  {place.name}
+                                </h4>
+                                <span className="inline-block mt-0.5 text-[8px] font-mono bg-[var(--bg)] border border-[var(--border)] px-1 py-0.5 rounded text-[var(--text-muted)] uppercase tracking-wider select-none font-bold">
+                                  {CATEGORY_LABELS[place.category] || place.category}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0 select-none" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => openEditForm(place, e)}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-600 text-[var(--text-muted)] hover:text-indigo-700 transition-all cursor-pointer"
+                                title="Edit Spot"
+                              >
+                                <Edit3 className="w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeletePlace(place.id, e)}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-650 text-[var(--text-muted)] hover:text-rose-650 transition-all cursor-pointer"
+                                title="Delete Spot"
+                              >
+                                <Trash2 className="w-3" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <p className="mt-1.5 text-[11px] text-[var(--text-muted)] leading-relaxed font-sans font-medium">
+                            {place.description}
+                          </p>
+
+                          {place.whyMatch && (
+                            <div className="mt-2 text-[9px] text-indigo-805 bg-indigo-55/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
+                              <span className="font-bold text-indigo-700">Match Vibe:</span> {place.whyMatch}
+                            </div>
+                          )}
+
+                          <div className="mt-2 text-[9px] text-[var(--text-muted)] font-mono flex items-center gap-1 border-t border-[var(--border)] pt-1.5 select-none">
+                            <MapPin className="w-3 border-none" />
+                            <span className="truncate max-w-[340px]" title={place.address}>{place.address}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Starter triggers */}
+              {places.length === 0 && !isLoading && (
+                <div className="border border-[var(--border)] bg-[var(--surface2)]/50 p-4 rounded-xl space-y-3">
+                  <h4 className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-1.5 select-none font-bold">
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-650" />
+                    <span>Starter Search Spell Prompts:</span>
+                  </h4>
+                  <div className="grid grid-cols-1 gap-1.5 text-left">
+                    {STARTER_PROMPTS.map((p) => (
+                      <button
+                        key={p.text}
+                        onClick={() => handleSendMessage(p.text)}
+                        className="flex items-center gap-2 text-left p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:border-indigo-600 hover:bg-white text-[var(--text-muted)] hover:text-slate-900 text-xs transition-all cursor-pointer"
+                      >
+                        <span className="text-base shrink-0">{p.icon}</span>
+                        <span className="truncate font-bold">{p.text}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* TAB B: PLANNER WORKSPACE SEQUENCE */}
           {activeTab === 'planner' && (
-            <PlannerWorkspace
-              openAddForm={openAddForm}
-              handleExportItinerary={handleExportItinerary}
-              handleCreateFromScratch={handleCreateFromScratch}
-              places={places}
-              filteredPlaces={filteredPlaces}
-              activePlaceId={activePlaceId}
-              hoveredPlaceId={hoveredPlaceId}
-              handleCardClick={handleCardClick}
-              setHoveredPlaceId={setHoveredPlaceId}
-              handleMovePlace={handleMovePlace}
-              openEditForm={openEditForm}
-              handleDeletePlace={handleDeletePlace}
-              setActiveTab={setActiveTab}
-              categoryLabels={CATEGORY_LABELS}
-            />
+            <div className="space-y-4">
+              
+              {/* Toolbar sequential buttons */}
+              <div className="flex flex-col gap-2 border-b border-slate-900 pb-3 select-none">
+                <button
+                  type="button"
+                  onClick={openAddForm}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-indigo-400 bg-indigo-50/70 hover:bg-indigo-600 text-indigo-900 hover:text-white rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Pin Manual Spot from Scratch</span>
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportItinerary}
+                    disabled={places.length === 0}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 border border-emerald-500/50 bg-emerald-50 hover:bg-emerald-600 disabled:opacity-40 disabled:hover:bg-emerald-50 text-emerald-800 hover:text-white rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                    title="Export to JSON"
+                  >
+                    <Download className="w-3 h-3 text-emerald-700 group-hover:text-white" />
+                    <span>Export JSON</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateFromScratch}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 border border-[var(--border)] bg-[var(--surface2)] hover:bg-rose-50 hover:border-rose-300 text-[var(--text-muted)] hover:text-rose-700 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                    title="Start fresh list"
+                  >
+                    <RotateCcw className="w-3 h-3 text-rose-600" />
+                    <span>Reset Scratch</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Itinerary steps mapping index */}
+              {filteredPlaces.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider select-none font-bold">
+                    <span>Sequential Route List</span>
+                    <span>Rearrange Node Order</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {filteredPlaces.map((place, index) => {
+                      const isActive = place.id === activePlaceId;
+                      const isHovered = place.id === hoveredPlaceId;
+                      const isFirst = index === 0;
+                      const isLast = index === filteredPlaces.length - 1;
+
+                      return (
+                        <div
+                          key={place.id}
+                          onClick={() => handleCardClick(place)}
+                          onMouseEnter={() => setHoveredPlaceId(place.id)}
+                          onMouseLeave={() => setHoveredPlaceId(null)}
+                          className={`group relative p-3 border rounded-xl cursor-pointer transition-all duration-300 text-left ${
+                            isActive
+                              ? 'border-indigo-600 bg-indigo-50/70 shadow-inner font-bold'
+                              : isHovered
+                              ? 'border-indigo-400 bg-indigo-50/30 scale-[1.01]'
+                              : 'border-[var(--border)] bg-[var(--surface2)] hover:border-[var(--accent2)]'
+                          }`}
+                        >
+                          {/* Sequential Badge overlay */}
+                          <div className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-indigo-100 border border-indigo-350 flex items-center justify-center text-[9px] font-mono font-bold text-indigo-800 select-none shadow-md">
+                            {index + 1}
+                          </div>
+
+                          <div className="flex items-start justify-between gap-2 pl-2">
+                            <div className="flex gap-2">
+                              <span className="text-xl pt-0.5 select-none">{place.emoji || '📍'}</span>
+                              <div>
+                                <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-700 transition-colors">
+                                  {place.name}
+                                </h4>
+                                <span className="inline-block mt-0.5 text-[8px] font-mono bg-[var(--bg)] border border-[var(--border)] px-1 py-0.5 rounded text-[var(--text-muted)] uppercase tracking-wider select-none font-bold">
+                                  {CATEGORY_LABELS[place.category] || place.category}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Move index triggers */}
+                            <div className="flex items-center gap-1 shrink-0 select-none" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => handleMovePlace(index, 'up', e)}
+                                disabled={isFirst}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-20 cursor-pointer transition-all"
+                                title="Move Node Up"
+                              >
+                                <ArrowUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => handleMovePlace(index, 'down', e)}
+                                disabled={isLast}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-20 cursor-pointer transition-all"
+                                title="Move Node Down"
+                              >
+                                <ArrowDown className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => openEditForm(place, e)}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-600 text-[var(--text-muted)] hover:text-indigo-600 cursor-pointer transition-all"
+                                title="Edit details"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeletePlace(place.id, e)}
+                                className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-450 hover:text-rose-650 text-[var(--text-muted)] cursor-pointer transition-all"
+                                title="Trash node"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <p className="mt-1.5 pl-2 text-[11px] text-[var(--text-muted)] leading-relaxed font-sans font-medium">
+                            {place.description}
+                          </p>
+
+                          {place.whyMatch && (
+                            <div className="ml-2 mt-2 text-[9px] text-indigo-805 bg-indigo-55/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
+                              <span className="font-bold text-indigo-700">Match Vibe:</span> {place.whyMatch}
+                            </div>
+                          )}
+
+                          <div className="mt-2 ml-2 text-[9px] text-[var(--text-muted)] font-mono flex items-center gap-1 border-t border-[var(--border)] pt-1.5 select-none">
+                            <MapPin className="w-3 border-none" />
+                            <span className="truncate max-w-[340px]" title={place.address}>{place.address}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* Planner empty state card */
+                <div className="border border-dashed border-[var(--border)] bg-[var(--surface2)]/40 p-6 rounded-2xl text-center space-y-4">
+                  <div className="mx-auto h-12 w-12 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center text-xl select-none">
+                    🗺️
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-xs text-[var(--text)]">Your Planner is Empty</h4>
+                    <p className="mt-1 text-[11px] text-[var(--text-muted)] leading-relaxed max-w-[240px] mx-auto font-medium">
+                      Build your sequence trip! Search with AI, or manually pin your personal favorite coordinates here.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5 pt-2 select-none">
+                    <button
+                      onClick={openAddForm}
+                      className="py-2 rounded-xl bg-indigo-650 hover:bg-indigo-605 text-white font-semibold text-xs tracking-wide transition-all shadow-md cursor-pointer"
+                    >
+                      + Add Manual Spot from Scratch
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('ai')}
+                      className="py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600 text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      💬 Message AI Genie Chat
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           
           <div ref={chatBottomRef} />
         </div>
 
         {/* Console assistant entry foot input bar inside column 3 */}
-        <footer className="p-4 border-t border-slate-900 bg-slate-950/90 backdrop-blur select-none">
+        <footer className="p-4 border-t border-[var(--border)] bg-[var(--surface-blur)] backdrop-blur select-none">
           {micError && (
-            <div className="mb-2 p-1.5 bg-rose-950/20 text-rose-300 rounded-lg text-[9px] font-mono border border-rose-900/40 flex items-center gap-1">
+            <div className="mb-2 p-1.5 bg-rose-50 text-rose-750 rounded-lg text-[10px] font-mono border border-rose-250/60 flex items-center gap-1 font-bold">
               <Info className="w-3 h-3 shrink-0" />
               <span>{micError}</span>
             </div>
@@ -895,7 +1417,7 @@ export default function App() {
               className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
                 isListening
                   ? 'bg-rose-600 border-rose-500 text-white shadow-lg animate-pulse'
-                  : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-white'
+                  : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-650'
               }`}
               title={isListening ? 'Stop' : 'Voice Speak'}
             >
@@ -912,12 +1434,12 @@ export default function App() {
                   if (e.key === 'Enter') handleSendMessage();
                 }}
                 placeholder="Ask Genie (e.g. temples in Kyoto)..."
-                className="w-full bg-slate-900 text-xs py-2.5 pl-3 pr-9 rounded-xl border border-slate-850 focus:outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-500 disabled:opacity-50"
+                className="w-full bg-[var(--bg)] text-xs py-2.5 pl-3 pr-9 rounded-xl border border-[var(--border)] focus:outline-none focus:border-indigo-650 transition-all text-[var(--text)] placeholder:text-[var(--text-muted)] font-medium"
               />
               <button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !inputMessage.trim()}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-600 transition-all cursor-pointer"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-400 transition-all cursor-pointer"
               >
                 <Send className="w-3 h-3" />
               </button>
@@ -930,13 +1452,13 @@ export default function App() {
       {/* 📱 MOBILE RESPONSIVE NAVIGATION BOTTOM TAB-BAR CONTROL PATTERN */}
       <nav
         id="mobile-bottom-navigation-bar"
-        className="fixed bottom-0 inset-x-0 h-16 bg-slate-950 border-t border-slate-900 flex items-center justify-around z-50 lg:hidden shadow-2xl select-none px-2 pb-1.5"
+        className="fixed bottom-0 inset-x-0 h-16 bg-[var(--surface-blur)] border-t border-[var(--border)] backdrop-blur-md flex items-center justify-around z-50 lg:hidden shadow-2xl select-none px-2 pb-1.5"
       >
         {/* Tab 1: Map View */}
         <button
           onClick={() => setMobileActiveTab('map')}
           className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer ${
-            mobileActiveTab === 'map' ? 'text-indigo-400 bg-indigo-500/5 font-bold' : 'text-slate-500 hover:text-slate-300'
+            mobileActiveTab === 'map' ? 'text-indigo-800 bg-indigo-50/75 font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
           }`}
         >
           <Compass className="w-4 h-4 mb-1" />
@@ -947,13 +1469,13 @@ export default function App() {
         <button
           onClick={() => setMobileActiveTab('controls')}
           className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer relative ${
-            mobileActiveTab === 'controls' ? 'text-indigo-400 bg-indigo-500/5 font-bold' : 'text-slate-500 hover:text-slate-300'
+            mobileActiveTab === 'controls' ? 'text-indigo-805 bg-indigo-50/75 font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
           }`}
         >
           <Layers className="w-4 h-4 mb-1" />
           <span className="text-[10px]">🎛️ Layers</span>
           {selectedCategories.length < 8 && (
-            <div className="absolute top-2.5 right-6 h-1.5 w-1.5 rounded-full bg-indigo-500"></div>
+            <div className="absolute top-2.5 right-6 h-1.5 w-1.5 rounded-full bg-indigo-600"></div>
           )}
         </button>
 
@@ -964,7 +1486,7 @@ export default function App() {
             setActiveTab('ai');
           }}
           className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer ${
-            mobileActiveTab === 'chat' ? 'text-indigo-400 bg-indigo-500/5 font-bold' : 'text-slate-500 hover:text-slate-300'
+            mobileActiveTab === 'chat' ? 'text-indigo-805 bg-indigo-50/75 font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
           }`}
         >
           <Sparkles className="w-4 h-4 mb-1" />
@@ -978,13 +1500,13 @@ export default function App() {
             setActiveTab('planner');
           }}
           className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer relative ${
-            mobileActiveTab === 'itinerary' ? 'text-indigo-400 bg-indigo-500/5 font-bold' : 'text-slate-500 hover:text-slate-300'
+            mobileActiveTab === 'itinerary' ? 'text-indigo-805 bg-indigo-50/75 font-bold' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
           }`}
         >
           <Navigation className="w-4 h-4 mb-1" />
           <span className="text-[10px]">📅 Planner</span>
           {places.length > 0 && (
-            <div className="absolute top-2 right-5 bg-indigo-600 text-white border border-slate-950 font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
+            <div className="absolute top-2 right-5 bg-indigo-650 text-white border border-transparent font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
               {filteredPlaces.length}
             </div>
           )}

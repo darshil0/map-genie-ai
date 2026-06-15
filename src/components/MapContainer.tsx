@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Place, MapLocation } from '../types';
 import WeatherWidget from './WeatherWidget';
@@ -59,8 +59,8 @@ export default function MapContainer({
     // Zoom controls on bottom right to clear space
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Beautiful premium dark tiles (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Beautiful premium light tiles (CartoDB Positron)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 20
     }).addTo(map);
@@ -126,28 +126,17 @@ export default function MapContainer({
 
       // Category pulse color mapping for high-fidelity interactive pulsing
       const catColorSpec: Record<string, { pulse: string; border: string; glow: string; activeStroke: string }> = {
-        cafe: { pulse: 'bg-indigo-500/40', border: 'border-indigo-400', glow: 'bg-indigo-500/15', activeStroke: 'ring-indigo-500/40' },
-        restaurant: { pulse: 'bg-rose-500/45', border: 'border-rose-400', glow: 'bg-rose-500/15', activeStroke: 'ring-rose-500/40' },
-        museum: { pulse: 'bg-purple-500/45', border: 'border-purple-400', glow: 'bg-purple-500/15', activeStroke: 'ring-purple-500/40' },
-        temple: { pulse: 'bg-amber-500/45', border: 'border-amber-400', glow: 'bg-amber-500/15', activeStroke: 'ring-amber-500/40' },
-        park: { pulse: 'bg-emerald-500/45', border: 'border-emerald-400', glow: 'bg-emerald-500/15', activeStroke: 'ring-emerald-500/40' },
-        'scenic-overlook': { pulse: 'bg-sky-500/45', border: 'border-sky-400', glow: 'bg-sky-500/15', activeStroke: 'ring-sky-500/40' },
-        historic: { pulse: 'bg-yellow-500/45', border: 'border-yellow-400', glow: 'bg-yellow-500/15', activeStroke: 'ring-yellow-500/40' },
-        custom: { pulse: 'bg-slate-400/40', border: 'border-slate-300', glow: 'bg-slate-400/15', activeStroke: 'ring-slate-400/40' },
+        cafe: { pulse: 'bg-indigo-500/30', border: 'border-indigo-600', glow: 'bg-indigo-500/5', activeStroke: 'ring-indigo-500/25' },
+        restaurant: { pulse: 'bg-rose-500/30', border: 'border-rose-600', glow: 'bg-rose-500/5', activeStroke: 'ring-rose-500/25' },
+        museum: { pulse: 'bg-purple-500/30', border: 'border-purple-600', glow: 'bg-purple-500/5', activeStroke: 'ring-purple-500/25' },
+        temple: { pulse: 'bg-amber-600/30', border: 'border-amber-700', glow: 'bg-amber-600/5', activeStroke: 'ring-amber-600/25' },
+        park: { pulse: 'bg-emerald-600/30', border: 'border-emerald-700', glow: 'bg-emerald-600/5', activeStroke: 'ring-emerald-600/25' },
+        'scenic-overlook': { pulse: 'bg-sky-500/30', border: 'border-sky-600', glow: 'bg-sky-500/5', activeStroke: 'ring-sky-500/25' },
+        historic: { pulse: 'bg-yellow-600/30', border: 'border-yellow-750', glow: 'bg-yellow-600/5', activeStroke: 'ring-yellow-600/25' },
+        custom: { pulse: 'bg-slate-500/30', border: 'border-slate-600', glow: 'bg-slate-500/5', activeStroke: 'ring-slate-500/25' },
       };
 
       const spec = catColorSpec[place.category] || catColorSpec.custom;
-
-      // Sanitize user inputs for safe HTML injection
-      const sanitize = (str: string) => {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-      };
-
-      const safeEmoji = sanitize(place.emoji || '📍');
-      const safeName = sanitize(place.name);
-      const safeDescription = sanitize(place.description);
 
       // Icon creation using category-specific CSS pulses
       const customEmojiIcon = L.divIcon({
@@ -155,32 +144,32 @@ export default function MapContainer({
           <div class="relative flex items-center justify-center">
             ${
               !isGeocoded
-                ? `<div class="absolute -inset-2 rounded-full bg-amber-500/35 blur-sm animate-pulse"></div>`
+                ? `<div class="absolute -inset-2 rounded-full bg-amber-500/25 blur-xs animate-pulse"></div>`
                 : isActive
-                ? `<div class="absolute -inset-2.5 rounded-full ${spec.pulse} blur-sm animate-ping"></div>`
+                ? `<div class="absolute -inset-2.5 rounded-full ${spec.pulse} blur-xs animate-ping"></div>`
                 : isHovered
-                ? `<div class="absolute -inset-3.5 rounded-full ${spec.pulse} blur-sm animate-pulse ring-4 ${spec.activeStroke}"></div>`
-                : `<div class="absolute -inset-1 rounded-full ${spec.glow} blur-sm"></div>`
+                ? `<div class="absolute -inset-3.5 rounded-full ${spec.pulse} blur-xs animate-pulse ring-4 ${spec.activeStroke}"></div>`
+                : `<div class="absolute -inset-1 rounded-full ${spec.glow} blur-xs"></div>`
             }
             <div class="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 shadow-md ${
               isActive
-                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-125 z-50 shadow-indigo-950/80 ring-2 ' + spec.activeStroke
+                ? 'bg-white border-2 ' + spec.border + ' text-2xl scale-125 z-55 shadow-slate-400/55 ring-2 ' + spec.activeStroke
                 : isHovered
-                ? 'bg-slate-900 border-2 ' + spec.border + ' text-2xl scale-110 z-50 shadow-indigo-950/60'
+                ? 'bg-white border-2 ' + spec.border + ' text-2xl scale-120 z-50 shadow-slate-400/40'
                 : !isGeocoded
-                ? 'bg-amber-950/90 border border-amber-500/50 opacity-70 scale-95'
-                : 'bg-slate-900/90 border border-white/10 hover:border-white/40 text-xl'
+                ? 'bg-amber-50 border border-amber-500/40 opacity-90 scale-95'
+                : 'bg-white border border-slate-300 hover:border-slate-500 text-xl'
             } cursor-pointer hover:scale-110 active:scale-95">
-              <span>${safeEmoji}</span>
+              <span>${place.emoji || '📍'}</span>
             </div>
             ${
               !isGeocoded
-                ? `<div class="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-slate-950 border border-slate-950">⏱️</div>`
+                ? `<div class="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-white border border-white">⏱️</div>`
                 : ''
             }
             ${
               routeSeqNumber !== null && isGeocoded
-                ? `<div class="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-mono font-bold text-white border border-slate-950 shadow-sm">${routeSeqNumber}</div>`
+                ? `<div class="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-mono font-bold text-white border border-white shadow-sm">${routeSeqNumber}</div>`
                 : ''
             }
           </div>
@@ -193,15 +182,15 @@ export default function MapContainer({
       // Add Leaflet popup description on hover/click interactions
       const popupContent = `
         <div class="p-2 select-none min-w-[160px]">
-          <div class="flex items-center gap-1.5 font-display font-semibold text-white">
-            ${routeSeqNumber ? `<span class="bg-indigo-600/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-sm select-none mr-1">Spot ${routeSeqNumber}</span>` : ''}
-            <span class="text-xl">${safeEmoji}</span>
-            <span>${safeName}</span>
+          <div class="flex items-center gap-1.5 font-display font-semibold text-slate-900">
+            ${routeSeqNumber ? `<span class="bg-indigo-600 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-sm select-none mr-1">Spot ${routeSeqNumber}</span>` : ''}
+            <span class="text-xl">${place.emoji}</span>
+            <span class="text-slate-950 font-bold">${place.name}</span>
           </div>
-          <p class="mt-1.5 text-xs text-slate-300 leading-snug font-sans">${safeDescription}</p>
-          <div class="mt-2 text-[9px] font-mono text-slate-400 border-t border-slate-800/80 pt-1 flex items-center justify-between">
-            <span class="uppercase tracking-wider font-bold text-indigo-400">${place.category}</span>
-            <span class="${!isGeocoded ? 'text-amber-400 font-bold' : 'text-emerald-400'}">
+          <p class="mt-1.5 text-xs text-slate-700 leading-snug font-sans font-medium">${place.description}</p>
+          <div class="mt-2 text-[9px] font-mono text-slate-500 border-t border-slate-200 pt-1.5 flex items-center justify-between">
+            <span class="uppercase tracking-wider font-bold text-indigo-750">${place.category}</span>
+            <span class="${!isGeocoded ? 'text-amber-700 font-bold' : 'text-emerald-700 font-bold'}">
               ${!isGeocoded ? 'Locating...' : 'Live Plot'}
             </span>
           </div>
@@ -268,10 +257,10 @@ export default function MapContainer({
 
   // 5. Automatically adjust map zoom level to include all active markers whenever a new list of places is generated/updated.
   // Order-invariant key prevents map jumping on simple sequencing tasks.
-  const placesBoundsTrackingKey = useMemo(() => [...places]
+  const placesBoundsTrackingKey = [...places]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((p) => `${p.id}-${p.latitude}-${p.longitude}`)
-    .join(','), [places]);
+    .join(',');
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -348,19 +337,19 @@ export default function MapContainer({
   }, [places, showRouteLines]);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-slate-950 border border-white/5 shadow-2xl">
+    <div className="w-full h-full relative overflow-hidden bg-[var(--bg)] border border-[var(--border)] shadow-xl">
       {/* Absolute Dynamic Grid backdrop texture */}
       {showGridLines && (
-        <div className="absolute inset-0 z-10 pointer-events-none opacity-[0.035]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)',
+        <div className="absolute inset-0 z-10 pointer-events-none opacity-[0.05]" style={{
+          backgroundImage: 'linear-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.08) 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }} />
       )}
 
       {/* Absolute Header Overlay in map showing current region context */}
       {centerLocation && (
-        <div className="absolute top-4 left-4 z-40 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10 shadow-lg text-[10px] font-mono tracking-wider text-slate-300 select-none flex items-center gap-1.5 uppercase">
-          <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <div className="absolute top-4 left-4 z-40 bg-[var(--surface-blur)] backdrop-blur-md px-3.5 py-2 rounded-full border border-[var(--border)] shadow-md text-[10px] font-mono tracking-wider text-[var(--text)] select-none flex items-center gap-1.5 uppercase font-bold">
+          <span className="flex h-1.5 w-1.5 rounded-full bg-teal-650 animate-pulse"></span>
           <span>Center: {centerLocation.name}</span>
         </div>
       )}

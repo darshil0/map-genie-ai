@@ -33,17 +33,6 @@ const CATEGORY_LABEL: Record<string, string> = {
   custom: 'Manual Custom Spot',
 };
 
-const CATEGORY_COLOR_MAPPING_CONST = {
-  cafe: '#4f46e5',
-  restaurant: '#f43f5e',
-  museum: '#a855f7',
-  temple: '#f59e0b',
-  park: '#10b981',
-  'scenic-overlook': '#0ea5e9',
-  historic: '#eab308',
-  custom: '#94a3b8'
-};
-
 export default function ItineraryAnalytics({ places }: ItineraryAnalyticsProps) {
   if (places.length === 0) return null;
 
@@ -103,7 +92,7 @@ export default function ItineraryAnalytics({ places }: ItineraryAnalyticsProps) 
       <div className="space-y-2 text-left">
         <span className="text-[9px] uppercase tracking-wider font-mono text-slate-400">Category Density distribution</span>
         <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-          {Object.entries(CATEGORY_COLOR_MAPPING_CONST).map(([catKey, counts]) => {
+          {Object.entries(CATEGORY_COLOR_MAPPING()).map(([catKey, counts]) => {
             const count = catDistribution[catKey] || 0;
             const percentage = totalSpots > 0 ? (count / totalSpots) * 100 : 0;
             const style = CATEGORY_COLORS[catKey] || CATEGORY_COLORS.custom;
@@ -144,3 +133,16 @@ export default function ItineraryAnalytics({ places }: ItineraryAnalyticsProps) 
   );
 }
 
+// Helper to provide sorted keys or standard static category catalog
+function CATEGORY_COLOR_MAPPING() {
+  return {
+    cafe: '#4f46e5',
+    restaurant: '#f43f5e',
+    museum: '#a855f7',
+    temple: '#f59e0b',
+    park: '#10b981',
+    'scenic-overlook': '#0ea5e9',
+    historic: '#eab308',
+    custom: '#94a3b8'
+  };
+}
