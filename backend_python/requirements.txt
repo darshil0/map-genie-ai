@@ -1,5 +1,47 @@
-fastapi>=0.100.0
-uvicorn>=0.22.0
-google-genai>=0.2.0
-python-dotenv>=1.0.0
-pydantic>=2.0.0
+# Map-Genie Python Backend Dependencies
+# Pin versions for reproducibility and security
+# Last updated: 2026-06-15
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Google AI
+google-generativeai==0.3.5
+
+# Environment & Configuration
+python-dotenv==1.0.0
+
+# Monitoring & Logging
+python-json-logger==2.0.7
+
+# Optional: Metrics & Observability
+prometheus-client==0.19.0  # For Prometheus metrics (optional)
+
+# Development (dev-only)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.1  # For testing HTTP endpoints
+
+# Linting & Type Checking
+mypy==1.7.0
+ruff==0.1.8
+black==23.11.0
+
+# Production Dependencies
+gunicorn==21.2.0
+
+# ============================================================================
+# Installation Instructions
+# ============================================================================
+# pip install -r requirements.txt
+#
+# For development with all testing tools:
+# pip install -r requirements.txt -r requirements-dev.txt
+#
+# Production deployment (minimal):
+# pip install --no-dev -r requirements.txt
+# ============================================================================
