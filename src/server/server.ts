@@ -29,13 +29,15 @@ function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not defined. Please add it to your environment secrets.");
+      throw new Error(
+        "GEMINI_API_KEY is not defined. Please add it to your environment secrets.",
+      );
     }
     aiClient = new GoogleGenAI({
       apiKey: apiKey,
       httpOptions: {
         headers: {
-          'User-Agent': 'aistudio-build',
+          "User-Agent": "aistudio-build",
         },
       },
     });
@@ -50,15 +52,27 @@ const ResponseSchema = {
     resolvedLocation: {
       type: Type.OBJECT,
       properties: {
-        name: { type: Type.STRING, description: "Detailed visual location name, city, and optional region (e.g. Kyoto, Japan)" },
-        latitude: { type: Type.NUMBER, description: "Approximate latitude centroid of this city (neutral backup value)" },
-        longitude: { type: Type.NUMBER, description: "Approximate longitude centroid of this city" }
+        name: {
+          type: Type.STRING,
+          description:
+            "Detailed visual location name, city, and optional region (e.g. Kyoto, Japan)",
+        },
+        latitude: {
+          type: Type.NUMBER,
+          description:
+            "Approximate latitude centroid of this city (neutral backup value)",
+        },
+        longitude: {
+          type: Type.NUMBER,
+          description: "Approximate longitude centroid of this city",
+        },
       },
-      required: ["name", "latitude", "longitude"]
+      required: ["name", "latitude", "longitude"],
     },
     aiResponseText: {
       type: Type.STRING,
-      description: "Local expert narrative explaining choices, answering user context, adding friendly insider recommendations."
+      description:
+        "Local expert narrative explaining choices, answering user context, adding friendly insider recommendations.",
     },
     spots: {
       type: Type.ARRAY,
@@ -66,17 +80,44 @@ const ResponseSchema = {
         type: Type.OBJECT,
         properties: {
           name: { type: Type.STRING, description: "Official place name" },
-          description: { type: Type.STRING, description: "Fascinating local tidbit, opening hours recommendation, or context" },
-          whyMatch: { type: Type.STRING, description: "Explains precisely why it connects to the requested vibe or theme" },
-          emoji: { type: Type.STRING, description: "Single descriptive emoji representing this specific place category (e.g. 🏮, ☕, 🏰, 🌳, 🍣)" },
-          address: { type: Type.STRING, description: "Highly specific geocodable location query including name, street address or cross street, city, country" },
-          category: { type: Type.STRING, description: "Place category such as cafe, restaurant, museum, temple, park, scenic-overlook, historic" }
+          description: {
+            type: Type.STRING,
+            description:
+              "Fascinating local tidbit, opening hours recommendation, or context",
+          },
+          whyMatch: {
+            type: Type.STRING,
+            description:
+              "Explains precisely why it connects to the requested vibe or theme",
+          },
+          emoji: {
+            type: Type.STRING,
+            description:
+              "Single descriptive emoji representing this specific place category (e.g. 🏮, ☕, 🏰, 🌳, 🍣)",
+          },
+          address: {
+            type: Type.STRING,
+            description:
+              "Highly specific geocodable location query including name, street address or cross street, city, country",
+          },
+          category: {
+            type: Type.STRING,
+            description:
+              "Place category such as cafe, restaurant, museum, temple, park, scenic-overlook, historic",
+          },
         },
-        required: ["name", "description", "whyMatch", "emoji", "address", "category"]
-      }
-    }
+        required: [
+          "name",
+          "description",
+          "whyMatch",
+          "emoji",
+          "address",
+          "category",
+        ],
+      },
+    },
   },
-  required: ["resolvedLocation", "aiResponseText", "spots"]
+  required: ["resolvedLocation", "aiResponseText", "spots"],
 };
 
 // API: Health probe
@@ -97,7 +138,9 @@ app.post("/api/chat", async (req, res) => {
 
     // Format chat history for prompt framing
     const formattedHistory = (history || [])
-      .map((h: any) => `${h.sender === "user" ? "User" : "Assistant"}: ${h.text}`)
+      .map(
+        (h: any) => `${h.sender === "user" ? "User" : "Assistant"}: ${h.text}`,
+      )
       .join("\n");
 
     const promptText = `
@@ -122,7 +165,7 @@ Always output standard JSON compliance according to the required schema. Ensure 
         responseMimeType: "application/json",
         responseSchema: ResponseSchema,
         temperature: 0.7,
-      }
+      },
     });
 
     const textOutput = modelResponse.text;
@@ -136,7 +179,7 @@ Always output standard JSON compliance according to the required schema. Ensure 
     console.error("Error in Map Genie /api/chat:", err);
     res.status(500).json({
       error: err.message || "An error occurred while generating suggestions.",
-      details: err.toString()
+      details: err.toString(),
     });
   }
 });
@@ -146,7 +189,9 @@ async function startServer() {
   const isProd = process.env.NODE_ENV === "production";
 
   if (!isProd) {
-    console.log("Starting server in development mode with Vite HMR middleware.");
+    console.log(
+      "Starting server in development mode with Vite HMR middleware.",
+    );
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
