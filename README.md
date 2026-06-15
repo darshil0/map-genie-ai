@@ -11,7 +11,7 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 
 - **🗣️ Just Speak Your Mind**: Tap the mic and tell Map-Genie what you're looking for! Our live-transcription handles the rest.
 - **🧠 Brains by Google Gemini**: Map-Genie understands context. It doesn't just keyword-match; it interprets your vibe and finds the coolest, most relevant spots utilizing the `@google/genai` SDK.
-- **🗺️ Interactive & Gorgeous**: Custom emoji markers drop beautifully onto a sleek, dark-mode CartoDB map. Click a place card, hover to trigger glowing halos, or view sequential route polylines as you edit.
+- **🗺️ Interactive & Gorgeous**: Custom emoji markers drop beautifully onto a sleek, premium, light-themed CartoDB Positron map. Click any place card, hover to trigger glowing halos, toggle grid/route indicators, or view sequential route polylines as you edit.
 - **💬 Chat to Map**: Thanks to our multi-turn history engine, you can refine your search without clearing the map. Ask for restaurants, then casually say *"What about parks nearby?"* and watch the magic happen.
 - **📅 Visual Itinerary & Route Planner**: Switch to the Planner Workspace tab to build, reorder, and refine your travel route manually. Draw glowing indicator lines connecting each sequential spot.
 - **🇺🇸 50 US States Curated Itineraries**: Load pre-defined, high-fidelity travel highlights for all 50 US States (featuring California upfront!) sequentially mapped with coordinates and custom suggestions in seconds.
@@ -26,10 +26,10 @@ We’ve pieced together an incredibly robust, full-stack architecture to keep th
 
 | What it does | What powers it |
 |---|---|
-| **The Brains (AI)** | [Google Gemini](https://ai.google.dev/) (`gemini-2.5`) via our native server-side API proxy |
+| **The Brains (AI)** | [Google Gemini](https://ai.google.dev/) via our native server-side API proxy |
 | **The Engine (Backend)** | Custom standalone [Express](https://expressjs.com/) Server, Node.js + ESM `esbuild` pipeline |
 | **The Visuals (Frontend)** | React 19, TypeScript, and [Tailwind CSS](https://tailwindcss.com/) utilities |
-| **The Canvas (Map)** | [Leaflet.js](https://leafletjs.com/) layered over [CartoDB Dark Matter](https://carto.com/basemaps/) |
+| **The Canvas (Map)** | [Leaflet.js](https://leafletjs.com/) layered over premium [CartoDB Positron](https://carto.com/basemaps/) Light map styles |
 | **The Coordinates** | [Nominatim](https://nominatim.org/) OpenStreetMap Geocoding |
 | **The Ears** | Native browser [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) |
 

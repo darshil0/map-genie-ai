@@ -4,6 +4,23 @@ All notable changes and functional updates to the **Map Genie** codebase are doc
 
 ---
 
+## [1.6.0] - 2026-06-15 (High-Contrast Academic Theme Adaptation & Compiler Stability)
+
+### 🎨 Visual & Typographic Elevation
+- **Paper Accent Design Theme**:
+  - Successfully moved away from rigid dark-mode gradients to an elegant background setup utilizing high-contrast paper variables (`--bg`, `--text`, `--surface-blur`).
+  - Added full CSS Custom Property integration support for high-contrast slate surfaces, clean borders, and rich indigo accents.
+- **Display Typography Integration**:
+  - Leveraged the gorgeous **Syne** font for display h2/h3 components and **DM Sans** for deep structural panels, paired with **JetBrains Mono** for low-level metadata status nodes.
+
+### ⚙️ Bug Fixes & Stability
+- **JSX Integration Compilation Restoration**:
+  - Cleaned up broken closing tags (`</label>`, `</section>`) that caused vite/esbuild build processes to fail.
+  - Eliminated stray token duplications and unterminated regular expressions inside JSX nodes, restoring 100% clean builds.
+  - Resolved nesting mismatches between responsive labels and spatial grid sections.
+
+---
+
 ## [1.5.0] - 2026-06-07 (Mobile Sidebar & Curation Form Polish)
 
 ### ✨ Added
