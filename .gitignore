@@ -1,8 +1,472 @@
+# ============================================================================
+# MAP-GENIE .GITIGNORE
+# Comprehensive ignore patterns for full-stack app (Node.js + Python)
+# Last updated: 2026-06-15
+# ============================================================================
+
+# ============================================================================
+# 1. NODE.JS DEPENDENCIES & BUILD ARTIFACTS
+# ============================================================================
+
+# Dependency directories (use `npm ci` for reproducible installs)
 node_modules/
+
+# Production build outputs
 build/
 dist/
+out/
+
+# Cache directories (Npm, Vite, Next.js, etc.)
+.npm/
+.cache/
+.eslintcache/
+.parcel-cache/
+.next/
+.nuxt/
+.turbo/
+
+# Compiled output
+*.tsbuildinfo
+
+# ESM/CommonJS build cache
+.rollup-cache/
+.swc/
+.turbopack/
+
+# ============================================================================
+# 2. PYTHON ARTIFACTS
+# ============================================================================
+
+# Python bytecode & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Python virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Python test coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.hypothesis/
+*.cover
+
+# Python environment
+.env.local
+.env.*.local
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Mypy cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================================
+# 3. ENVIRONMENT & SECRETS (CRITICAL: Never commit secrets!)
+# ============================================================================
+
+# Environment files - ALL variations (except template)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+.env.test
+
+# AWS credentials & config
+.aws/
+.aws/credentials
+.aws/config
+
+# SSH keys
+.ssh/
+*.pem
+*.ppk
+
+# Cryptographic keys & certificates
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+
+# GCP service accounts
+service-account*.json
+*-service-account-*.json
+
+# Firebase config (contains API keys)
+.firebaserc
+firebase-debug.log
+
+# Third-party API keys
+.apikeys
+.secrets
+
+# ============================================================================
+# 4. IDE & EDITOR CONFIGURATION
+# ============================================================================
+
+# Visual Studio Code
+.vscode/
+.vscode-test/
+*.code-workspace
+.vscodeignore
+
+# JetBrains IDEs (IntelliJ, WebStorm, etc.)
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+.netrwhist
+
+# Emacs
+*~
+\#*#
+.\#*
+*.elc
+
+# Nano
+.nano_history
+
+# VS Live Share
+.vsls.json
+
+# IDE session/cache files
+.history/
+.ionide/
+
+# ============================================================================
+# 5. TESTING & COVERAGE
+# ============================================================================
+
+# Coverage reports
 coverage/
+coverage.lcov
+.nyc_output/
+
+# Test videos/screenshots (from Cypress, Playwright, etc.)
+cypress/screenshots/
+cypress/videos/
+test-results/
+playwright-report/
+
+# E2E test artifacts
+dist-test/
+
+# ============================================================================
+# 6. OPERATING SYSTEM FILES (Platform-Specific)
+# ============================================================================
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+
+# Windows
+Thumbs.db
+thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.shortcut-targets-by-id
+
+# Linux
+.directory
+*~
+.nfs*
+.fuse_hidden*
+.gvfs-fuse-daemon
+
+# ============================================================================
+# 7. LOGS & TEMPORARY FILES
+# ============================================================================
+
+# Log files
 *.log
-.env*
+logs/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# Application logs
+map_genie.log
+server.log
+app.log
+error.log
+
+# Build/process logs
+build.log
+deploy.log
+test.log
+
+# ============================================================================
+# 8. DEPENDENCY LOCK FILES (Choose Strategy)
+# ============================================================================
+
+# OPTION A: COMMIT lock files for reproducibility (RECOMMENDED for production)
+# Uncomment if using Yarn:
+# !yarn.lock
+
+# Uncomment if using pnpm:
+# !pnpm-lock.yaml
+
+# Uncomment if using npm:
+# !package-lock.json
+
+# OPTION B: Ignore all lock files (not recommended for production)
+# yarn.lock
+# pnpm-lock.yaml
+# package-lock.json
+
+# ============================================================================
+# 9. BUILD & DEPLOYMENT ARTIFACTS
+# ============================================================================
+
+# Docker artifacts
+docker-compose.override.yml
+Dockerfile.local
+.dockerignore
+
+# Kubernetes manifests (local testing)
+k8s-local/
+kubeconfig
+
+# Terraform/Infrastructure as Code
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Build metadata
+build-info.json
+build-manifest.json
+.build-timestamp
+
+# Deployment configs (local overrides)
+.deploy.local
+deploy.env.local
+
+# ============================================================================
+# 10. DATABASE & DATA FILES
+# ============================================================================
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# MongoDB
+.mongorc.js
+mongod.lock
+
+# Local data stores
+data/
+data.json
+.data/
+
+# ============================================================================
+# 11. CLOUD PLATFORM CONFIG (Local/Sensitive)
+# ============================================================================
+
+# Firebase
+.firebase/
+.firebaserc
+
+# Netlify
+.netlify/
+netlify.toml.local
+
+# Vercel
+.vercel/
+.vercel/*.json
+
+# AWS SAM
+.aws-sam/
+sam-tests/
+
+# ============================================================================
+# 12. DEPENDENCY MANAGER CACHE
+# ============================================================================
+
+# npm
+.npm/
+npm-shrinkwrap.json.local
+
+# Yarn
+.yarn/cache/
+.yarn/install-state.gz
+.yarn/build-state.yml
+.pnp.*
+
+# pnpm
+pnpm-workspace.yaml.local
+
+# Bun
+bunfig.toml.local
+.bunfig.json.local
+
+# ============================================================================
+# 13. RUNTIME & PROCESS FILES
+# ============================================================================
+
+# Node process files
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime artifacts
+.runtime/
+.forever/
+.pm2/
+
+# ============================================================================
+# 14. MISCELLANEOUS BUILD & COMPILER ARTIFACTS
+# ============================================================================
+
+# Vite/Rollup
+.vite/
+dist-old/
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Babel
+.babel/
+babel.config.js.local
+
+# Webpack
+webpack.config.local.js
+
+# Storybook
+storybook-static/
+node_modules/@storybook/
+
+# ============================================================================
+# 15. DEVELOPMENT TOOL ARTIFACTS
+# ============================================================================
+
+# Git
+.git/
+.gitmodules
+.github/workflows/disabled/
+
+# GitHub Pages
+site/
+_site/
+
+# Husky hooks
+.husky/_/
+.husky/husky.sh
+
+# pre-commit hooks
+.pre-commit-config.yaml.local
+
+# ============================================================================
+# 16. EXCEPTIONS (Files/Folders TO INCLUDE despite above rules)
+# ============================================================================
+
+# Always include environment template (no secrets)
 !.env.example
+
+# Always include lock files for reproducibility (uncomment if using)
+# !package-lock.json
+# !yarn.lock
+# !pnpm-lock.yaml
+
+# Always include critical config templates
+!.github/workflows/
+!.vscode/settings.json.example
+!.idea/runConfigurations.example/
+
+# Always include essential documentation
+!docs/
+
+# ============================================================================
+# GUIDELINES FOR MAINTENANCE
+# ============================================================================
+
+# When adding new patterns:
+# 1. Add a comment explaining what's being ignored
+# 2. Group by category (dependencies, logs, config, etc.)
+# 3. Use wildcards for patterns (*.log, *.env)
+# 4. Test with: git add . --dry-run
+# 5. Verify critical files aren't ignored: git check-ignore <file>
+#
+# To audit what's actually ignored:
+# git check-ignore -v <filename>
+#
+# To see what would be committed:
+# git add . --dry-run
+#
+# To remove accidentally committed files:
+# git rm --cached <file>
+# git rm -r --cached <directory>
+#
+# For global ignores (affect all repos on your machine):
+# Create ~/.gitignore_global and configure:
+# git config --global core.excludesFile ~/.gitignore_global
