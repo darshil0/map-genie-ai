@@ -2,7 +2,7 @@
 
 All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
 
-## [1.7.0] - 2024-05-20
+## [1.7.0] - 2026-06-15
 
 ### Features
 
@@ -28,7 +28,7 @@ All notable changes to **Map-Genie** are documented below. This project adheres 
 
 ---
 
-## [1.6.0] - 2024-04-15
+## [1.6.0] - 2026-04-15
 
 ### Added
 
@@ -42,7 +42,7 @@ All notable changes to **Map-Genie** are documented below. This project adheres 
 
 ---
 
-## [1.5.0] - 2024-03-10
+## [1.5.0] - 2026-03-10
 
 ### Added
 
@@ -51,7 +51,7 @@ All notable changes to **Map-Genie** are documented below. This project adheres 
 
 ---
 
-## [1.1.0] - 2024-01-15
+## [1.1.0] - 2026-01-15
 
 ### Added
 
