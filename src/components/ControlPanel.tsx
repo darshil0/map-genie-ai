@@ -5,8 +5,20 @@
 
 import React from "react";
 import { Layers, RotateCcw, Save, Trash2 } from "lucide-react";
-import { MapLocation, Place } from "../types";
+import { Place } from "../types";
 import { US_STATES_DATA } from "../data/usStatesData";
+
+interface CategoryChip {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+}
+
+interface SavedRoute {
+  name: string;
+  [key: string]: any;
+}
 
 interface ControlPanelProps {
   mobileActiveTab: string;
@@ -19,14 +31,14 @@ interface ControlPanelProps {
   handleClearFilters: () => void;
   selectedCategories: string[];
   toggleCategoryFilter: (catId: string) => void;
-  categoryChips: any[];
+  categoryChips: CategoryChip[];
   handleLoadStatePreset: (stateName: string) => void;
   newRouteName: string;
   setNewRouteName: (val: string) => void;
   places: Place[];
   handleSaveCurrentRoute: () => void;
-  customSavedRoutes: any[];
-  handleLoadSavedRoute: (route: any) => void;
+  customSavedRoutes: SavedRoute[];
+  handleLoadSavedRoute: (route: SavedRoute) => void;
   handleDeleteSavedRoute: (index: number, e: React.MouseEvent) => void;
 }
 
@@ -73,7 +85,7 @@ export default function ControlPanel({
               Genie Control
             </h2>
             <span className="text-[9px] font-mono text-indigo-700 uppercase tracking-widest font-bold mt-0.5 block">
-              Layers &amp; Memory
+              Layers & Memory
             </span>
           </div>
         </div>
@@ -128,14 +140,14 @@ export default function ControlPanel({
             <div className="flex items-center gap-2 text-[9px] font-semibold text-[var(--text-muted)] font-mono">
               <button
                 onClick={handleSelectAllFilters}
-                className="hover:text-indigo-705 transition-colors font-bold"
+                className="hover:text-indigo-600 transition-colors font-bold"
               >
                 Select All
               </button>
               <span>|</span>
               <button
                 onClick={handleClearFilters}
-                className="hover:text-amber-705 transition-colors font-bold"
+                className="hover:text-amber-600 transition-colors font-bold"
               >
                 Clear
               </button>
@@ -243,12 +255,12 @@ export default function ControlPanel({
                     onClick={() => handleLoadSavedRoute(route)}
                     className="group flex items-center justify-between p-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-500 cursor-pointer transition-all"
                   >
-                    <span className="text-[11px] text-[var(--text-muted)] group-hover:text-indigo-700 font-medium truncate select-none">
+                    <span className="text-[11px] text-[var(--text-muted)] group-hover:text-indigo-600 font-medium truncate select-none">
                       📅 {route.name}
                     </span>
                     <button
                       onClick={(e) => handleDeleteSavedRoute(i, e)}
-                      className="p-1 rounded text-[var(--text-muted)] hover:text-rose-650 hover:bg-rose-50 cursor-pointer transition-colors"
+                      className="p-1 rounded text-[var(--text-muted)] hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
                       title="Delete from memory"
                     >
                       <Trash2 className="w-3 h-3" />
