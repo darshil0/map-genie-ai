@@ -92,7 +92,7 @@ export default function PlaceForm({
                   setFormEmoji(suggestedEmoji);
                 }
               }}
-              className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:focus-border-indigo-500 focus:outline-none text-[var(--text)] font-sans"
+              className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-500 focus:outline-none text-[var(--text)] font-sans"
             >
               <option value="cafe">☕ Cafe</option>
               <option value="restaurant">🍣 Restaurant</option>
