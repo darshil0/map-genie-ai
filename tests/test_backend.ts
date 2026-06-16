@@ -45,9 +45,9 @@ const MockResponseSchema = {
 function runStaticTests() {
   console.log("✅ Assertion 1: Schema Type mapping validates successfully.");
   if (
-    MockResponseSchema.properties.resolvedLocation.type !== "OBJECT" ||
-    MockResponseSchema.properties.spots.type !== "ARRAY" ||
-    MockResponseSchema.properties.spots.items.properties.name.type !== "STRING"
+    MockResponseSchema.properties.resolvedLocation.type !== Type.OBJECT ||
+    MockResponseSchema.properties.spots.type !== Type.ARRAY ||
+    MockResponseSchema.properties.spots.items.properties.name.type !== Type.STRING
   ) {
     throw new Error(
       "FAIL: Response schema structure does not match expected output format.",
@@ -75,17 +75,14 @@ async function runLiveIntegrationTest() {
     return;
   }
 
-  console.log("🚀 Testing live integration with Gemini (gemini-3.5-flash)...");
+  console.log("🚀 Testing live integration with Gemini (gemini-2.0-flash)...");
   try {
     const ai = new GoogleGenAI({
       apiKey: apiKey,
-      httpOptions: {
-        headers: { "User-Agent": "aistudio-build" },
-      },
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.0-flash",
       contents: "List one cozy tea shop in Kyoto with precise structure",
       config: {
         responseMimeType: "application/json",
@@ -121,7 +118,7 @@ async function runLiveIntegrationTest() {
       "❌ Live Integration suite failed with error:",
       err.message || err,
     );
-    process.exit(1);
+    throw err;
   }
 }
 
@@ -132,10 +129,8 @@ async function main() {
     console.log("=========================================");
     console.log("🎉 ALL TESTS PASSED SUCCESSFULLY! ✅");
     console.log("=========================================");
-    process.exit(0);
   } catch (error) {
     console.error("🚨 Test assertion failed:", error);
-    process.exit(1);
   }
 }
 
