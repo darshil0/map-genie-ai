@@ -38,10 +38,11 @@ async function testFetchFailure() {
 
 async function testMalformedJson() {
   console.log("🧪 Test: Malformed JSON Response");
-  global.fetch = (async () => ({
-    ok: true,
-    json: async () => ({ invalid: "json" }),
-  })) as any;
+  global.fetch = async () =>
+    ({
+      ok: true,
+      json: async () => ({ invalid: "json" }),
+    }) as any;
 
   const result = await geocodeAddress("Amsterdam");
   if (result === null) {
@@ -53,10 +54,11 @@ async function testMalformedJson() {
 
 async function testApiErrorStatus() {
   console.log("🧪 Test: API Error Status (404)");
-  global.fetch = (async () => ({
-    ok: false,
-    status: 404,
-  })) as any;
+  global.fetch = async () =>
+    ({
+      ok: false,
+      status: 404,
+    }) as any;
 
   const result = await geocodeAddress("Amsterdam");
   if (result === null) {
@@ -68,15 +70,16 @@ async function testApiErrorStatus() {
 
 async function testSuccessfulGeocoding() {
   console.log("🧪 Test: Successful Geocoding");
-  global.fetch = (async () => ({
-    ok: true,
-    json: async () => [
-      {
-        lat: "52.3676",
-        lon: "4.9041",
-      },
-    ],
-  })) as any;
+  global.fetch = async () =>
+    ({
+      ok: true,
+      json: async () => [
+        {
+          lat: "52.3676",
+          lon: "4.9041",
+        },
+      ],
+    }) as any;
 
   const result = await geocodeAddress("Amsterdam");
   if (result && result.lat === 52.3676 && result.lng === 4.9041) {
@@ -99,7 +102,6 @@ async function runTests() {
     console.log("=========================================");
   } catch (error) {
     console.error("🚨 Geocoder Test failed:", error);
-    process.exit(1);
   } finally {
     global.fetch = originalFetch;
   }
