@@ -22,6 +22,9 @@ export async function geocodeAddress(
   // Respect Nominatim's guidelines by waiting slightly to distribute queries if triggered consecutively
   await new Promise((resolve) => setTimeout(resolve, 600));
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
   try {
     const queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
 
@@ -31,6 +34,7 @@ export async function geocodeAddress(
         Accept: "application/json",
         "User-Agent": "MapGenieTravelApp/1.0 (darshils99@gmail.com)",
       },
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -48,8 +52,14 @@ export async function geocodeAddress(
         lng: parseFloat(firstResult.lon),
       };
     }
-  } catch (err) {
-    console.error("Failed executing geocoding query against OSM:", err);
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      console.warn("Geocoding request timed out for address:", address);
+    } else {
+      console.error("Failed executing geocoding query against OSM:", err);
+    }
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   return null;
