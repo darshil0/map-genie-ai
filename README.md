@@ -73,7 +73,8 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 5.  **Open in your browser**:
     Navigate to [http://localhost:3000](http://localhost:3000)
 
----
+### API Usage Example (Internal)
+Map-Genie communicates with the Gemini-powered backend using a simple JSON API:
 
 ## 📂 Project Structure
 

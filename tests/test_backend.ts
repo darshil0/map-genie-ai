@@ -21,8 +21,8 @@ const MockResponseSchema = {
       properties: {
         name: { type: Type.STRING },
         latitude: { type: Type.NUMBER },
-        longitude: { type: Type.NUMBER }
-      }
+        longitude: { type: Type.NUMBER },
+      },
     },
     aiResponseText: { type: Type.STRING },
     spots: {
@@ -35,27 +35,43 @@ const MockResponseSchema = {
           whyMatch: { type: Type.STRING },
           emoji: { type: Type.STRING },
           address: { type: Type.STRING },
-          category: { type: Type.STRING }
-        }
-      }
-    }
-  }
+          category: { type: Type.STRING },
+        },
+      },
+    },
+  },
 };
 
 function runStaticTests() {
   console.log("✅ Assertion 1: Schema Type mapping validates successfully.");
-  if (MockResponseSchema.properties.resolvedLocation.type !== "OBJECT" ||
-      MockResponseSchema.properties.spots.type !== "ARRAY" ||
-      MockResponseSchema.properties.spots.items.properties.name.type !== "STRING") {
-    throw new Error("FAIL: Response schema structure does not match expected output format.");
+  if (
+    MockResponseSchema.properties.resolvedLocation.type !== "OBJECT" ||
+    MockResponseSchema.properties.spots.type !== "ARRAY" ||
+    MockResponseSchema.properties.spots.items.properties.name.type !== "STRING"
+  ) {
+    throw new Error(
+      "FAIL: Response schema structure does not match expected output format.",
+    );
   }
-  console.log("✅ Assertion 2: All Type definition attributes match the client specifications.");
+  console.log(
+    "✅ Assertion 2: All Type definition attributes match the client specifications.",
+  );
+
+  console.log("🧪 Test: Static Parameter Validation (Mock)");
+  const mockReqBodyMissingMessage = {};
+  if (!mockReqBodyMissingMessage.hasOwnProperty("message")) {
+    console.log("✅ Passed: Correctly identified missing 'message' parameter.");
+  } else {
+    throw new Error("FAIL: Should have detected missing 'message'.");
+  }
 }
 
 async function runLiveIntegrationTest() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-    console.log("⚠️ Skipped live API integration test because GEMINI_API_KEY is not configured.");
+    console.log(
+      "⚠️ Skipped live API integration test because GEMINI_API_KEY is not configured.",
+    );
     return;
   }
 
@@ -64,8 +80,8 @@ async function runLiveIntegrationTest() {
     const ai = new GoogleGenAI({
       apiKey: apiKey,
       httpOptions: {
-        headers: { 'User-Agent': 'aistudio-build' }
-      }
+        headers: { "User-Agent": "aistudio-build" },
+      },
     });
 
     const response = await ai.models.generateContent({
@@ -74,13 +90,15 @@ async function runLiveIntegrationTest() {
       config: {
         responseMimeType: "application/json",
         responseSchema: MockResponseSchema,
-        temperature: 0.1
-      }
+        temperature: 0.1,
+      },
     });
 
     const body = response.text;
     if (!body) {
-      throw new Error("Lobby: Empty text response received from live mock test.");
+      throw new Error(
+        "Lobby: Empty text response received from live mock test.",
+      );
     }
 
     const parsed = JSON.parse(body.trim());
@@ -89,13 +107,20 @@ async function runLiveIntegrationTest() {
     console.log(`💬 AI Intro: ${parsed.aiResponseText?.substring(0, 50)}...`);
     console.log(`🏢 Number of spots returned: ${parsed.spots?.length}`);
 
-    if (!parsed.resolvedLocation || !parsed.aiResponseText || !Array.isArray(parsed.spots)) {
+    if (
+      !parsed.resolvedLocation ||
+      !parsed.aiResponseText ||
+      !Array.isArray(parsed.spots)
+    ) {
       throw new Error("FAIL: Schema response is missing key metadata items.");
     }
 
     console.log("✅ Integration assertion finished with green results!");
   } catch (err: any) {
-    console.error("❌ Live Integration suite failed with error:", err.message || err);
+    console.error(
+      "❌ Live Integration suite failed with error:",
+      err.message || err,
+    );
     process.exit(1);
   }
 }

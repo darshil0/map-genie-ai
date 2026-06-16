@@ -16,23 +16,27 @@ interface GeocodeResult {
  * Adheres to open-use guidelines by supplying a distinct User-Agent.
  * Fallbacks are handled gracefully by callers if null is returned.
  */
-export async function geocodeAddress(address: string): Promise<GeocodeResult | null> {
+export async function geocodeAddress(
+  address: string,
+): Promise<GeocodeResult | null> {
   // Respect Nominatim's guidelines by waiting slightly to distribute queries if triggered consecutively
   await new Promise((resolve) => setTimeout(resolve, 600));
 
   try {
     const queryUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-    
+
     const response = await fetch(queryUrl, {
       method: "GET",
       headers: {
-        "Accept": "application/json",
-        "User-Agent": "MapGenieTravelApp/1.0 (darshils99@gmail.com)"
-      }
+        Accept: "application/json",
+        "User-Agent": "MapGenieTravelApp/1.0 (darshils99@gmail.com)",
+      },
     });
 
     if (!response.ok) {
-      console.warn(`OSM Nominatim geocoding request rejected with status: ${response.status}`);
+      console.warn(
+        `OSM Nominatim geocoding request rejected with status: ${response.status}`,
+      );
       return null;
     }
 
@@ -41,7 +45,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult | n
       const firstResult = json[0];
       return {
         lat: parseFloat(firstResult.lat),
-        lng: parseFloat(firstResult.lon)
+        lng: parseFloat(firstResult.lon),
       };
     }
   } catch (err) {
