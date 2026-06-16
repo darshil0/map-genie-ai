@@ -137,49 +137,49 @@ export default function MapContainer({
           pulse: "bg-indigo-500/30",
           border: "border-indigo-600",
           glow: "bg-indigo-500/5",
-          activeStroke: "ring-indigo-500/25",
+          activeStroke: "ring-indigo-500",
         },
         restaurant: {
           pulse: "bg-rose-500/30",
           border: "border-rose-600",
           glow: "bg-rose-500/5",
-          activeStroke: "ring-rose-500/25",
+          activeStroke: "ring-rose-500",
         },
         museum: {
           pulse: "bg-purple-500/30",
           border: "border-purple-600",
           glow: "bg-purple-500/5",
-          activeStroke: "ring-purple-500/25",
+          activeStroke: "ring-purple-500",
         },
         temple: {
           pulse: "bg-amber-600/30",
           border: "border-amber-700",
           glow: "bg-amber-600/5",
-          activeStroke: "ring-amber-600/25",
+          activeStroke: "ring-amber-600",
         },
         park: {
           pulse: "bg-emerald-600/30",
           border: "border-emerald-700",
           glow: "bg-emerald-600/5",
-          activeStroke: "ring-emerald-600/25",
+          activeStroke: "ring-emerald-600",
         },
         "scenic-overlook": {
           pulse: "bg-sky-500/30",
           border: "border-sky-600",
           glow: "bg-sky-500/5",
-          activeStroke: "ring-sky-500/25",
+          activeStroke: "ring-sky-500",
         },
         historic: {
           pulse: "bg-yellow-600/30",
-          border: "border-yellow-750",
+          border: "border-yellow-700",
           glow: "bg-yellow-600/5",
-          activeStroke: "ring-yellow-600/25",
+          activeStroke: "ring-yellow-600",
         },
         custom: {
           pulse: "bg-slate-500/30",
           border: "border-slate-600",
           glow: "bg-slate-500/5",
-          activeStroke: "ring-slate-500/25",
+          activeStroke: "ring-slate-500",
         },
       };
 
@@ -202,12 +202,12 @@ export default function MapContainer({
               isActive
                 ? "bg-white border-2 " +
                   spec.border +
-                  " text-2xl scale-125 z-55 shadow-slate-400/55 ring-2 " +
+                  " text-2xl scale-125 z-50 shadow-slate-400/55 ring-2 " +
                   spec.activeStroke
                 : isHovered
                   ? "bg-white border-2 " +
                     spec.border +
-                    " text-2xl scale-120 z-50 shadow-slate-400/40"
+                    " text-2xl scale-120 z-40 shadow-slate-400/40"
                   : !isGeocoded
                     ? "bg-amber-50 border border-amber-500/40 opacity-90 scale-95"
                     : "bg-white border border-slate-300 hover:border-slate-500 text-xl"
@@ -241,7 +241,7 @@ export default function MapContainer({
           </div>
           <p class="mt-1.5 text-xs text-slate-700 leading-snug font-sans font-medium">${place.description}</p>
           <div class="mt-2 text-[9px] font-mono text-slate-500 border-t border-slate-200 pt-1.5 flex items-center justify-between">
-            <span class="uppercase tracking-wider font-bold text-indigo-750">${place.category}</span>
+            <span class="uppercase tracking-wider font-bold text-indigo-700">${place.category}</span>
             <span class="${!isGeocoded ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}">
               ${!isGeocoded ? "Locating..." : "Live Plot"}
             </span>
@@ -331,7 +331,7 @@ export default function MapContainer({
         }
         return null;
       })
-      .filter((loc): loc is L.LatLng => loc !== null);
+      .filter((loc) => loc !== null);
 
     if (validCoordinates.length > 0) {
       const bounds = L.latLngBounds(validCoordinates);
@@ -363,7 +363,7 @@ export default function MapContainer({
         }
         return null;
       })
-      .filter((coord): coord is [number, number] => coord !== null);
+      .filter((coord) => coord !== null);
 
     if (latLngs.length > 1) {
       // Glow polyline: broad translucent underlay simulating neon reflection
@@ -411,7 +411,7 @@ export default function MapContainer({
       {/* Absolute Header Overlay in map showing current region context */}
       {centerLocation && (
         <div className="absolute top-4 left-4 z-40 bg-[var(--surface-blur)] backdrop-blur-md px-3.5 py-2 rounded-full border border-[var(--border)] shadow-md text-[10px] font-mono tracking-wider text-[var(--text)] select-none flex items-center gap-1.5 uppercase font-bold">
-          <span className="flex h-1.5 w-1.5 rounded-full bg-teal-650 animate-pulse"></span>
+          <span className="flex h-1.5 w-1.5 rounded-full bg-teal-600 animate-pulse"></span>
           <span>Center: {centerLocation.name}</span>
         </div>
       )}
