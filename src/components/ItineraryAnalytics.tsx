@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Place } from "../types";
-import { Compass, BarChart3, Tag, Heart, Map, Sparkles } from "lucide-react";
+import { BarChart3, Sparkles, Map } from "lucide-react";
 
 interface ItineraryAnalyticsProps {
   places: Place[];
@@ -75,6 +75,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   historic: "Historic Castle Site",
   custom: "Manual Custom Spot",
 };
+
+// Static category catalog for consistent ordering
+const CATEGORY_CATALOG = [
+  "cafe",
+  "restaurant",
+  "museum",
+  "temple",
+  "park",
+  "scenic-overlook",
+  "historic",
+  "custom",
+];
 
 export default function ItineraryAnalytics({
   places,
@@ -154,8 +166,7 @@ export default function ItineraryAnalytics({
           Category Density distribution
         </span>
         <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-          {Object.entries(CATEGORY_COLOR_MAPPING()).map(([catKey, counts]) => {
-            const count = catDistribution[catKey] || 0;
+          {sortedCategories.map(([catKey, count]) => {
             const percentage = totalSpots > 0 ? (count / totalSpots) * 100 : 0;
             const style = CATEGORY_COLORS[catKey] || CATEGORY_COLORS.custom;
 
@@ -205,18 +216,4 @@ export default function ItineraryAnalytics({
       </div>
     </div>
   );
-}
-
-// Helper to provide sorted keys or standard static category catalog
-function CATEGORY_COLOR_MAPPING() {
-  return {
-    cafe: "#4f46e5",
-    restaurant: "#f43f5e",
-    museum: "#a855f7",
-    temple: "#f59e0b",
-    park: "#10b981",
-    "scenic-overlook": "#0ea5e9",
-    historic: "#eab308",
-    custom: "#94a3b8",
-  };
 }
