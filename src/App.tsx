@@ -69,7 +69,7 @@ const CATEGORY_CHIPS = [
     label: "Temples",
     emoji: "⛩️",
     color:
-      "text-amber-805 bg-amber-50 border-amber-200 hover:border-amber-400 hover:bg-amber-100/60 font-medium",
+      "text-amber-800 bg-amber-50 border-amber-200 hover:border-amber-400 hover:bg-amber-100/60 font-medium",
   },
   {
     id: "park",
@@ -90,7 +90,7 @@ const CATEGORY_CHIPS = [
     label: "Historic",
     emoji: "🏰",
     color:
-      "text-yellow-850 bg-yellow-50 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-105/60 font-medium",
+      "text-yellow-800 bg-yellow-50 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-100/60 font-medium",
   },
   {
     id: "custom",
@@ -452,6 +452,7 @@ export default function App() {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        places: [],
       },
     ]);
     setActiveTab("planner");
