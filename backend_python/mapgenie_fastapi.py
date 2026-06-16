@@ -26,13 +26,16 @@ from typing import List, Optional
 from datetime import datetime
 from functools import wraps
 from contextlib import asynccontextmanager
+from collections import defaultdict
+from threading import Lock
 
 from fastapi import FastAPI, HTTPException, Request, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZIPMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator, constr, conlist
+from pydantic import BaseModel, Field, field_validator, StringConstraints
+from pydantic.config import ConfigDict
 from dotenv import load_dotenv
 import google.generativeai as genai
 from google.generativeai import GenerativeModel
@@ -97,7 +100,8 @@ class MapLocation(BaseModel):
     latitude: float = Field(..., ge=-90, le=90, description="Latitude (-90 to 90)")
     longitude: float = Field(..., ge=-180, le=180, description="Longitude (-180 to 180)")
 
-    @validator('latitude', 'longitude')
+    @field_validator('latitude', 'longitude')
+    @classmethod
     def validate_coordinates(cls, v):
         """Ensure coordinates are valid numbers."""
         if not isinstance(v, (int, float)):
@@ -108,11 +112,12 @@ class MapLocation(BaseModel):
 class Message(BaseModel):
     """Chat history message."""
     id: str = Field(..., min_length=1, max_length=50)
-    sender: str = Field(..., regex="^(user|assistant)$", description="Message sender role")
-    text: constr(min_length=1, max_length=MAX_MESSAGE_LENGTH) = Field(...)
+    sender: str = Field(..., pattern="^(user|assistant)$", description="Message sender role")
+    text: str = Field(..., min_length=1, max_length=MAX_MESSAGE_LENGTH)
     timestamp: str = Field(..., description="ISO 8601 timestamp")
 
-    @validator('timestamp')
+    @field_validator('timestamp')
+    @classmethod
     def validate_timestamp(cls, v):
         """Ensure timestamp is valid ISO 8601."""
         try:
@@ -124,19 +129,20 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     """Request to generate travel spot recommendations."""
-    message: constr(min_length=1, max_length=MAX_MESSAGE_LENGTH) = Field(..., description="User query")
-    history: conlist(Message, max_items=MAX_HISTORY_MESSAGES) = Field(default=[], description="Chat history")
+    message: str = Field(..., min_length=1, max_length=MAX_MESSAGE_LENGTH, description="User query")
+    history: List[Message] = Field(default=[], description="Chat history")
     currentLocation: Optional[MapLocation] = Field(None, description="User's current location context")
 
-    @validator('history')
+    @field_validator('history')
+    @classmethod
     def validate_history_size(cls, v):
         """Prevent excessive chat history."""
         if len(v) > MAX_HISTORY_MESSAGES:
             raise ValueError(f"Chat history exceeds {MAX_HISTORY_MESSAGES} messages")
         return v
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema Extra={
             "example": {
                 "message": "Find cozy coffee shops near me",
                 "history": [],
@@ -147,6 +153,7 @@ class ChatRequest(BaseModel):
                 }
             }
         }
+    )
 
 
 class SpotSchema(BaseModel):
@@ -154,11 +161,12 @@ class SpotSchema(BaseModel):
     name: str = Field(..., min_length=1, max_length=200, description="Official POI name")
     description: str = Field(..., min_length=10, max_length=500, description="Why this spot is recommended")
     whyMatch: str = Field(..., min_length=5, max_length=300, description="Reasoning for recommendation")
-    emoji: str = Field(..., regex="^[\\U0001F300-\\U0001F9FF]|[☀-♿]$", description="Valid emoji marker")
+    emoji: str = Field(..., pattern="^[\\U0001F300-\\U0001F9FF]|[☀-♿]$", description="Valid emoji marker")
     address: str = Field(..., min_length=5, max_length=300, description="Geocodable address")
-    category: str = Field(..., regex="^(cafe|restaurant|museum|park|outlook|historic|hotel|art|food|nature)$")
+    category: str = Field(..., pattern="^(cafe|restaurant|museum|park|outlook|historic|hotel|art|food|nature)$")
 
-    @validator('emoji')
+    @field_validator('emoji')
+    @classmethod
     def validate_emoji_length(cls, v):
         """Ensure emoji is single character."""
         if len(v) != 1:
@@ -172,7 +180,8 @@ class ResolutionSchema(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
 
-    @validator('latitude', 'longitude')
+    @field_validator('latitude', 'longitude')
+    @classmethod
     def validate_coordinates(cls, v):
         """Ensure valid coordinate ranges."""
         if not isinstance(v, (int, float)):
@@ -184,10 +193,10 @@ class GeminiResponseSchema(BaseModel):
     """Complete API response with recommendations."""
     resolvedLocation: ResolutionSchema
     aiResponseText: str = Field(..., min_length=10, max_length=1000, description="AI's explanation")
-    spots: conlist(SpotSchema, min_items=1, max_items=10) = Field(...)
+    spots: List[SpotSchema] = Field(..., min_length=1, max_length=10)
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "resolvedLocation": {
                     "name": "Amsterdam",
@@ -207,6 +216,7 @@ class GeminiResponseSchema(BaseModel):
                 ]
             }
         }
+    )
 
 
 class ErrorDetail(BaseModel):
@@ -315,9 +325,6 @@ async def log_requests(request: Request, call_next):
 # ============================================================================
 # RATE LIMITING (Simple in-memory)
 # ============================================================================
-
-from collections import defaultdict
-from threading import Lock
 
 _rate_limit_store = defaultdict(list)
 _rate_limit_lock = Lock()
