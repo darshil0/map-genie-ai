@@ -5,10 +5,8 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Thermometer,
   Wind,
   Droplets,
-  CloudSun,
   Cloud,
   Sun,
   CloudRain,
@@ -112,7 +110,7 @@ export default function WeatherWidget({
       return {
         condition: "Foggy Mist",
         themeClass:
-          "from-zinc-500/15 via-slate-650/10 to-transparent border-slate-700/50 text-slate-300",
+          "from-zinc-500/15 via-slate-600/10 to-transparent border-slate-700/50 text-slate-300",
         icon: <Cloud className="w-4 h-4 text-zinc-400" />,
         glowColor: "bg-zinc-500/20",
       };
@@ -189,7 +187,7 @@ export default function WeatherWidget({
           </span>
           <button
             onClick={fetchWeather}
-            className="p-1 rounded bg-slate-850 hover:bg-slate-800 border border-slate-850 text-slate-400 hover:text-white"
+            className="p-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-800 text-slate-400 hover:text-white"
           >
             Retry
           </button>
@@ -216,7 +214,7 @@ export default function WeatherWidget({
             {/* Toggle Switch */}
             <button
               onClick={() => setIsFahrenheit(!isFahrenheit)}
-              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-950 hover:bg-indigo-650 border border-slate-800 text-indigo-300 hover:text-white transition-all duration-200 cursor-pointer"
+              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-950 hover:bg-indigo-600 border border-slate-800 text-indigo-300 hover:text-white transition-all duration-200 cursor-pointer"
               title={`Switch to ${isFahrenheit ? "Celsius" : "Fahrenheit"}`}
             >
               {isFahrenheit ? "°F" : "°C"}
