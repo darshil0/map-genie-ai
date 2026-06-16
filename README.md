@@ -73,7 +73,8 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 5.  **Open in your browser**:
     Navigate to [http://localhost:3000](http://localhost:3000)
 
----
+### API Usage Example (Internal)
+Map-Genie communicates with the Gemini-powered backend using a simple JSON API:
 
 ## 📂 Project Structure
 
@@ -98,25 +99,6 @@ Click the microphone icon and speak your request. Map-Genie will transcribe your
 1. Search for a location.
 2. Click the **"Add to Itinerary"** button on any place card.
 3. Open the **Planner Workspace** to reorder stops and view your daily schedule.
-
-### API Usage Example (Internal)
-Map-Genie communicates with the Gemini-powered backend using a simple JSON API:
-
-```javascript
-const response = await fetch('/api/chat', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    message: "Find cozy coffee shops in Amsterdam",
-    history: [],
-    currentLocation: { lat: 52.3676, lng: 4.9041 }
-  })
-});
-
-const data = await response.json();
-console.log(data.aiResponseText);
-console.log(data.spots); // Array of place objects
-```
 
 ---
 
