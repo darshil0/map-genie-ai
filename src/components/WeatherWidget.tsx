@@ -8,6 +8,7 @@ import {
   Wind,
   Droplets,
   Cloud,
+  CloudSun,
   Sun,
   CloudRain,
   CloudSnow,
