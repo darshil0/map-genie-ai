@@ -23,8 +23,13 @@ import {
   Info,
   Send,
 } from "lucide-react";
-import { Message, Place, MapLocation } from "../types";
+import { Message, Place } from "../types";
 import ItineraryAnalytics from "./ItineraryAnalytics";
+
+interface StarterPrompt {
+  text: string;
+  icon: string;
+}
 
 interface AssistantPanelProps {
   mobileActiveTab: string;
@@ -41,7 +46,7 @@ interface AssistantPanelProps {
   openEditForm: (place: Place, e?: React.MouseEvent) => void;
   handleDeletePlace: (id: string, e?: React.MouseEvent) => void;
   handleSendMessage: (customText?: string) => void;
-  starterPrompts: any[];
+  starterPrompts: StarterPrompt[];
   categoryLabels: Record<string, string>;
   openAddForm: () => void;
   handleExportItinerary: () => void;
@@ -107,7 +112,7 @@ export default function AssistantPanel({
           }}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border btn-tab cursor-pointer ${
             activeTab === "ai"
-              ? "btn-tab-active border-indigo-500/50 text-indigo-800"
+              ? "btn-tab-active border-indigo-500/50 text-indigo-600"
               : "bg-transparent border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface2)]"
           }`}
         >
@@ -118,7 +123,7 @@ export default function AssistantPanel({
           onClick={() => setActiveTab("planner")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border btn-tab cursor-pointer ${
             activeTab === "planner"
-              ? "btn-tab-active border-indigo-500/50 text-indigo-800"
+              ? "btn-tab-active border-indigo-500/50 text-indigo-600"
               : "bg-transparent border-transparent text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface2)]"
           }`}
         >
@@ -158,7 +163,7 @@ export default function AssistantPanel({
                 <div
                   className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed text-left ${
                     msg.sender === "user"
-                      ? "bg-indigo-650 text-white rounded-tr-none shadow-md"
+                      ? "bg-indigo-600 text-white rounded-tr-none shadow-md"
                       : "bg-[var(--surface2)] text-[var(--text)] border border-[var(--border)] rounded-tl-none font-sans"
                   }`}
                 >
@@ -221,7 +226,7 @@ export default function AssistantPanel({
                               {place.emoji || "📍"}
                             </span>
                             <div>
-                              <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-700 transition-colors">
+                              <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-600 transition-colors">
                                 {place.name}
                               </h4>
                               <span className="inline-block mt-0.5 text-[8px] font-mono bg-[var(--bg)] border border-[var(--border)] px-1 py-0.5 rounded text-[var(--text-muted)] uppercase tracking-wider select-none font-bold">
@@ -237,14 +242,14 @@ export default function AssistantPanel({
                           >
                             <button
                               onClick={(e) => openEditForm(place, e)}
-                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-600 text-[var(--text-muted)] hover:text-indigo-700 transition-all cursor-pointer"
+                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-indigo-600 text-[var(--text-muted)] hover:text-indigo-600 transition-all cursor-pointer"
                               title="Edit Spot"
                             >
                               <Edit3 className="w-3" />
                             </button>
                             <button
                               onClick={(e) => handleDeletePlace(place.id, e)}
-                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-650 text-[var(--text-muted)] hover:text-rose-650 transition-all cursor-pointer"
+                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-600 text-[var(--text-muted)] hover:text-rose-600 transition-all cursor-pointer"
                               title="Delete Spot"
                             >
                               <Trash2 className="w-3" />
@@ -257,7 +262,7 @@ export default function AssistantPanel({
                         </p>
 
                         {place.whyMatch && (
-                          <div className="mt-2 text-[9px] text-indigo-805 bg-indigo-55/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
+                          <div className="mt-2 text-[9px] text-indigo-700 bg-indigo-50/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
                             <span className="font-bold text-indigo-700">
                               Match Vibe:
                             </span>{" "}
@@ -285,7 +290,7 @@ export default function AssistantPanel({
             {filteredPlaces.length === 0 && !isLoading && (
               <div className="border border-[var(--border)] bg-[var(--surface2)]/50 p-4 rounded-xl space-y-3">
                 <h4 className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-1.5 select-none font-bold">
-                  <BookOpen className="w-3.5 h-3.5 text-indigo-650" />
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
                   <span>Starter Search Spell Prompts:</span>
                 </h4>
                 <div className="grid grid-cols-1 gap-1.5 text-left">
@@ -371,7 +376,7 @@ export default function AssistantPanel({
                         }`}
                       >
                         {/* Sequential Badge overlay */}
-                        <div className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-indigo-100 border border-indigo-350 flex items-center justify-center text-[9px] font-mono font-bold text-indigo-800 select-none shadow-md">
+                        <div className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-indigo-100 border border-indigo-300 flex items-center justify-center text-[9px] font-mono font-bold text-indigo-800 select-none shadow-md">
                           {index + 1}
                         </div>
 
@@ -381,7 +386,7 @@ export default function AssistantPanel({
                               {place.emoji || "📍"}
                             </span>
                             <div>
-                              <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-700 transition-colors">
+                              <h4 className="font-display font-semibold text-xs text-[var(--text)] group-hover:text-indigo-600 transition-colors">
                                 {place.name}
                               </h4>
                               <span className="inline-block mt-0.5 text-[8px] font-mono bg-[var(--bg)] border border-[var(--border)] px-1 py-0.5 rounded text-[var(--text-muted)] uppercase tracking-wider select-none font-bold">
@@ -421,7 +426,7 @@ export default function AssistantPanel({
                             </button>
                             <button
                               onClick={(e) => handleDeletePlace(place.id, e)}
-                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-450 hover:text-rose-650 text-[var(--text-muted)] cursor-pointer transition-all"
+                              className="p-1 rounded bg-[var(--bg)] border border-[var(--border)] hover:border-rose-600 hover:text-rose-600 text-[var(--text-muted)] cursor-pointer transition-all"
                               title="Trash node"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -434,7 +439,7 @@ export default function AssistantPanel({
                         </p>
 
                         {place.whyMatch && (
-                          <div className="ml-2 mt-2 text-[9px] text-indigo-805 bg-indigo-55/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
+                          <div className="ml-2 mt-2 text-[9px] text-indigo-700 bg-indigo-50/70 border border-indigo-200/60 p-2 rounded-lg font-mono leading-relaxed">
                             <span className="font-bold text-indigo-700">
                               Match Vibe:
                             </span>{" "}
@@ -474,7 +479,7 @@ export default function AssistantPanel({
                 <div className="flex flex-col gap-1.5 pt-2 select-none">
                   <button
                     onClick={openAddForm}
-                    className="py-2 rounded-xl bg-indigo-650 hover:bg-indigo-605 text-white font-semibold text-xs tracking-wide transition-all shadow-md cursor-pointer"
+                    className="py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs tracking-wide transition-all shadow-md cursor-pointer"
                   >
                     + Add Manual Spot from Scratch
                   </button>
@@ -496,7 +501,7 @@ export default function AssistantPanel({
       {/* Console assistant entry foot input bar inside column 3 */}
       <footer className="p-4 border-t border-[var(--border)] bg-[var(--surface-blur)] backdrop-blur select-none">
         {micError && (
-          <div className="mb-2 p-1.5 bg-rose-50 text-rose-750 rounded-lg text-[10px] font-mono border border-rose-250/60 flex items-center gap-1 font-bold">
+          <div className="mb-2 p-1.5 bg-rose-50 text-rose-700 rounded-lg text-[10px] font-mono border border-rose-200 flex items-center gap-1 font-bold">
             <Info className="w-3 h-3 shrink-0" />
             <span>{micError}</span>
           </div>
@@ -509,7 +514,7 @@ export default function AssistantPanel({
             className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
               isListening
                 ? "bg-rose-600 border-rose-500 text-white shadow-lg animate-pulse"
-                : "bg-[var(--bg)] border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-650"
+                : "bg-[var(--bg)] border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600"
             }`}
             title={isListening ? "Stop" : "Voice Speak"}
           >
@@ -530,7 +535,7 @@ export default function AssistantPanel({
                 if (e.key === "Enter") handleSendMessage();
               }}
               placeholder="Ask Genie (e.g. temples in Kyoto)..."
-              className="w-full bg-[var(--bg)] text-xs py-2.5 pl-3 pr-9 rounded-xl border border-[var(--border)] focus:outline-none focus:border-indigo-650 transition-all text-[var(--text)] placeholder:text-[var(--text-muted)] font-medium"
+              className="w-full bg-[var(--bg)] text-xs py-2.5 pl-3 pr-9 rounded-xl border border-[var(--border)] focus:outline-none focus:border-indigo-600 transition-all text-[var(--text)] placeholder:text-[var(--text-muted)] font-medium"
             />
             <button
               onClick={() => handleSendMessage()}
