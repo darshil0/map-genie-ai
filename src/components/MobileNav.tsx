@@ -44,7 +44,7 @@ export default function MobileNav({
         onClick={() => setMobileActiveTab("controls")}
         className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer relative ${
           mobileActiveTab === "controls"
-            ? "text-indigo-805 bg-indigo-50/75 font-bold"
+            ? "text-indigo-800 bg-indigo-50/75 font-bold"
             : "text-[var(--text-muted)] hover:text-[var(--text)]"
         }`}
       >
@@ -63,7 +63,7 @@ export default function MobileNav({
         }}
         className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer ${
           mobileActiveTab === "chat"
-            ? "text-indigo-805 bg-indigo-50/75 font-bold"
+            ? "text-indigo-800 bg-indigo-50/75 font-bold"
             : "text-[var(--text-muted)] hover:text-[var(--text)]"
         }`}
       >
@@ -79,14 +79,14 @@ export default function MobileNav({
         }}
         className={`flex-1 flex flex-col items-center justify-center h-full transition-all cursor-pointer relative ${
           mobileActiveTab === "itinerary"
-            ? "text-indigo-805 bg-indigo-50/75 font-bold"
+            ? "text-indigo-800 bg-indigo-50/75 font-bold"
             : "text-[var(--text-muted)] hover:text-[var(--text)]"
         }`}
       >
         <Navigation className="w-4 h-4 mb-1" />
         <span className="text-[10px]">📅 Planner</span>
         {filteredPlacesCount > 0 && (
-          <div className="absolute top-2 right-5 bg-indigo-650 text-white border border-transparent font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
+          <div className="absolute top-2 right-5 bg-indigo-600 text-white border border-transparent font-mono text-[8px] h-4 min-w-[16px] rounded-full flex items-center justify-center font-bold px-1 select-none shadow">
             {filteredPlacesCount}
           </div>
         )}
