@@ -72,7 +72,7 @@ export default function MapPanel({
             type="button"
             className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
               isListening
-                ? "bg-rose-650 border-rose-600 text-white shadow-lg animate-pulse"
+                ? "bg-rose-600 border-rose-500 text-white shadow-lg animate-pulse"
                 : "bg-[var(--bg)] border-[var(--border)] text-[var(--text-muted)] hover:text-indigo-600 hover:border-indigo-300"
             }`}
             title={
@@ -106,7 +106,7 @@ export default function MapPanel({
             <button
               onClick={() => handleSendMessage()}
               disabled={isLoading || !inputMessage.trim()}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-650 hover:bg-indigo-600 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-500 transition-all cursor-pointer"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-45 disabled:bg-transparent disabled:text-slate-500 transition-all cursor-pointer"
             >
               <Send className="w-3 h-3" />
             </button>
