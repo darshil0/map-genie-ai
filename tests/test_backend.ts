@@ -75,14 +75,14 @@ async function runLiveIntegrationTest() {
     return;
   }
 
-  console.log("🚀 Testing live integration with Gemini (gemini-2.0-flash)...");
+  console.log("🚀 Testing live integration with Gemini (gemini-1.5-flash)...");
   try {
     const ai = new GoogleGenAI({
       apiKey: apiKey,
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       contents: "List one cozy tea shop in Kyoto with precise structure",
       config: {
         responseMimeType: "application/json",

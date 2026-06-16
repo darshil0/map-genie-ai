@@ -48,9 +48,13 @@ export default function WeatherWidget({
     if (latitude === null || longitude === null) return;
     setLoading(true);
     setError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=auto`;
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) {
         throw new Error("Failed to retrieve forecast data");
       }
@@ -74,9 +78,14 @@ export default function WeatherWidget({
         }),
       });
     } catch (err: any) {
-      console.error("Weather Fetch Error:", err);
+      if (err.name === "AbortError") {
+        console.warn("Weather data fetch timed out");
+      } else {
+        console.error("Weather Fetch Error:", err);
+      }
       setError("Unavailable");
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };

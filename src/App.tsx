@@ -143,12 +143,14 @@ export default function App() {
   const [newRouteName, setNewRouteName] = useState("");
 
   // Form Fields
-  const [formName, setFormName] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formAddress, setFormAddress] = useState("");
-  const [formCategory, setFormCategory] = useState("cafe");
-  const [formEmoji, setFormEmoji] = useState("📍");
-  const [formWhyMatch, setFormWhyMatch] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    address: "",
+    category: "cafe",
+    emoji: "📍",
+    whyMatch: "",
+  });
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -308,12 +310,14 @@ export default function App() {
   // Open Form to Add a Spot from Scratch
   const openAddForm = () => {
     setEditingPlace(null);
-    setFormName("");
-    setFormDescription("");
-    setFormAddress("");
-    setFormCategory("cafe");
-    setFormEmoji("📍");
-    setFormWhyMatch("Custom hand-made itinerary spot");
+    setFormData({
+      name: "",
+      description: "",
+      address: "",
+      category: "cafe",
+      emoji: CATEGORY_EMOJIS["cafe"] || "☕",
+      whyMatch: "Custom hand-made itinerary spot",
+    });
     setIsFormOpen(true);
   };
 
@@ -321,18 +325,20 @@ export default function App() {
   const openEditForm = (place: Place, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setEditingPlace(place);
-    setFormName(place.name);
-    setFormDescription(place.description);
-    setFormAddress(place.address);
-    setFormCategory(place.category);
-    setFormEmoji(place.emoji);
-    setFormWhyMatch(place.whyMatch || "");
+    setFormData({
+      name: place.name,
+      description: place.description,
+      address: place.address,
+      category: place.category,
+      emoji: place.emoji,
+      whyMatch: place.whyMatch || "",
+    });
     setIsFormOpen(true);
   };
 
   // Handle Save of Custom Spot (Add/Update)
   const handleSaveCustomPlace = async () => {
-    if (!formName.trim() || !formAddress.trim()) {
+    if (!formData.name.trim() || !formData.address.trim()) {
       return;
     }
 
@@ -345,15 +351,15 @@ export default function App() {
 
     const newPlace: Place = {
       id: targetId,
-      name: formName.trim(),
-      description: formDescription.trim(),
-      whyMatch: formWhyMatch.trim(),
-      emoji: formEmoji.trim(),
-      address: formAddress.trim(),
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      whyMatch: formData.whyMatch.trim(),
+      emoji: formData.emoji.trim(),
+      address: formData.address.trim(),
       latitude: isEdit ? editingPlace!.latitude : baseLat,
       longitude: isEdit ? editingPlace!.longitude : baseLng,
       geocodingStatus: "loading",
-      category: formCategory,
+      category: formData.category,
     };
 
     let updatedPlacesList: Place[] = [];
@@ -863,18 +869,8 @@ export default function App() {
       {isFormOpen && (
         <PlaceForm
           editingPlace={editingPlace}
-          formName={formName}
-          setFormName={setFormName}
-          formDescription={formDescription}
-          setFormDescription={setFormDescription}
-          formAddress={formAddress}
-          setFormAddress={setFormAddress}
-          formCategory={formCategory}
-          setFormCategory={setFormCategory}
-          formEmoji={formEmoji}
-          setFormEmoji={setFormEmoji}
-          formWhyMatch={formWhyMatch}
-          setFormWhyMatch={setFormWhyMatch}
+          formData={formData}
+          setFormData={setFormData}
           setIsFormOpen={setIsFormOpen}
           handleSaveCustomPlace={handleSaveCustomPlace}
           categoryEmojis={CATEGORY_EMOJIS}

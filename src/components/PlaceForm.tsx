@@ -9,18 +9,24 @@ import { Place } from "../types";
 
 interface PlaceFormProps {
   editingPlace: Place | null;
-  formName: string;
-  setFormName: (val: string) => void;
-  formDescription: string;
-  setFormDescription: (val: string) => void;
-  formAddress: string;
-  setFormAddress: (val: string) => void;
-  formCategory: string;
-  setFormCategory: (val: string) => void;
-  formEmoji: string;
-  setFormEmoji: (val: string) => void;
-  formWhyMatch: string;
-  setFormWhyMatch: (val: string) => void;
+  formData: {
+    name: string;
+    description: string;
+    address: string;
+    category: string;
+    emoji: string;
+    whyMatch: string;
+  };
+  setFormData: React.Dispatch<
+    React.SetStateAction<{
+      name: string;
+      description: string;
+      address: string;
+      category: string;
+      emoji: string;
+      whyMatch: string;
+    }>
+  >;
   setIsFormOpen: (val: boolean) => void;
   handleSaveCustomPlace: () => void;
   categoryEmojis: Record<string, string>;
@@ -28,18 +34,8 @@ interface PlaceFormProps {
 
 export default function PlaceForm({
   editingPlace,
-  formName,
-  setFormName,
-  formDescription,
-  setFormDescription,
-  formAddress,
-  setFormAddress,
-  formCategory,
-  setFormCategory,
-  formEmoji,
-  setFormEmoji,
-  formWhyMatch,
-  setFormWhyMatch,
+  formData,
+  setFormData,
   setIsFormOpen,
   handleSaveCustomPlace,
   categoryEmojis,
@@ -70,8 +66,10 @@ export default function PlaceForm({
           </label>
           <input
             type="text"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, name: e.target.value }))
+            }
             placeholder="e.g. My Secret Courtyard Tea"
             className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
           />
@@ -83,14 +81,15 @@ export default function PlaceForm({
               Category
             </label>
             <select
-              value={formCategory}
+              value={formData.category}
               onChange={(e) => {
                 const newCat = e.target.value;
-                setFormCategory(newCat);
-                const suggestedEmoji = categoryEmojis[newCat];
-                if (suggestedEmoji) {
-                  setFormEmoji(suggestedEmoji);
-                }
+                const suggestedEmoji = categoryEmojis[newCat] || "📍";
+                setFormData((prev) => ({
+                  ...prev,
+                  category: newCat,
+                  emoji: suggestedEmoji,
+                }));
               }}
               className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-500 focus:outline-none text-[var(--text)] font-sans"
             >
@@ -110,8 +109,10 @@ export default function PlaceForm({
             </label>
             <input
               type="text"
-              value={formEmoji}
-              onChange={(e) => setFormEmoji(e.target.value)}
+              value={formData.emoji}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, emoji: e.target.value }))
+              }
               placeholder="e.g. 🏮"
               maxLength={4}
               className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] text-center font-sans"
@@ -125,8 +126,10 @@ export default function PlaceForm({
           </label>
           <input
             type="text"
-            value={formAddress}
-            onChange={(e) => setFormAddress(e.target.value)}
+            value={formData.address}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, address: e.target.value }))
+            }
             placeholder="e.g. Kyoto Tower, Shimogyo Ward, Kyoto, Japan"
             className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
           />
@@ -140,8 +143,10 @@ export default function PlaceForm({
             Description
           </label>
           <textarea
-            value={formDescription}
-            onChange={(e) => setFormDescription(e.target.value)}
+            value={formData.description}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, description: e.target.value }))
+            }
             placeholder="Add outstanding details, highlights, or tips..."
             rows={2}
             className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans resize-none"
@@ -154,8 +159,10 @@ export default function PlaceForm({
           </label>
           <input
             type="text"
-            value={formWhyMatch}
-            onChange={(e) => setFormWhyMatch(e.target.value)}
+            value={formData.whyMatch}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, whyMatch: e.target.value }))
+            }
             placeholder="Why this spot belongs in your journey"
             className="w-full bg-[var(--bg)] text-xs p-2.5 rounded-lg border border-[var(--border)] focus:border-indigo-600 focus:outline-none text-[var(--text)] font-sans"
           />
@@ -166,7 +173,7 @@ export default function PlaceForm({
         <button
           type="button"
           onClick={handleSaveCustomPlace}
-          disabled={!formName.trim() || !formAddress.trim()}
+          disabled={!formData.name.trim() || !formData.address.trim()}
           className="flex-grow py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold text-xs transition-all shadow-lg hover:shadow-indigo-600/35 cursor-pointer"
         >
           Save Spot

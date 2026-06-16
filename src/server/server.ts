@@ -156,7 +156,7 @@ Analyze this request, identify 4 to 6 incredibly matching real-world spots, and 
 `;
 
     const modelResponse = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash",
       contents: promptText,
       config: {
         systemInstruction: `You are Map Genie, an AI Travel Sidekick. You specialize in receiving chat inputs (e.g., 'cozy coffee shops in Amsterdam', 'hidden temples near Kyoto') and extracting outstanding, highly localized places and cafes.
@@ -186,6 +186,14 @@ Always output standard JSON compliance according to the required schema. Ensure 
 
 // Start integration with Vite/Production static files
 async function startServer() {
+  // Explicitly validate the GEMINI_API_KEY on startup
+  if (!process.env.GEMINI_API_KEY) {
+    console.error(
+      "FATAL ERROR: GEMINI_API_KEY is not defined in environment variables.",
+    );
+    process.exit(1);
+  }
+
   const isProd = process.env.NODE_ENV === "production";
 
   if (!isProd) {
