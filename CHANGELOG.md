@@ -2,6 +2,21 @@
 
 All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [1.8.0] - 2026-06-16
+
+### Added
+
+- **Python Backend Microservice**: Introduced a high-performance FastAPI-based backend in `backend_python/` using Pydantic for validation and Uvicorn for serving.
+- **Real-time Weather Integration**: Added `WeatherWidget.tsx` component to provide live weather updates for locations using the Open-Meteo API.
+- **Spatial Analytics Dashboard**: Added `ItineraryAnalytics.tsx` to provide users with data-driven insights into their planned itineraries.
+
+### Documentation
+
+- Updated `README.md` to include Python backend setup and new frontend features.
+- Expanded `CHANGELOG.md` with version 1.8.0.
+
+---
+
 ## [1.7.0] - 2026-06-15
 
 ### Features

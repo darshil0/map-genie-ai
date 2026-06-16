@@ -12,7 +12,7 @@ import pytest
 import json
 from datetime import datetime
 from unittest.mock import patch, MagicMock
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
 from server import (
     app,
@@ -32,7 +32,7 @@ from server import (
 @pytest.fixture
 async def client():
     """Create async HTTP client for testing."""
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
