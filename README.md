@@ -12,6 +12,8 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 - **🧠 AI-Powered Insights**: Powered by Google Gemini, Map-Genie understands context and intent to find the most relevant spots.
 - **🗺️ Interactive Maps**: Custom emoji markers on a beautiful CartoDB Positron basemap.
 - **📅 Itinerary Planner**: Build, reorder, and refine your travel route in the Planner Workspace.
+- **🌤️ Real-time Weather**: Integrated `WeatherWidget` provides live forecasts for your chosen destinations via Open-Meteo.
+- **📊 Spatial Analytics**: `ItineraryAnalytics` offers deep insights into your travel plans, including category distribution and geocoding health.
 - **🇺🇸 Preset Itineraries**: Load curated highlights for all 50 US States.
 - **💾 Save & Export**: Save your favorite routes locally or export them as JSON.
 
@@ -20,14 +22,16 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Leaflet.js
-- **Backend**: Node.js, Express.js
-- **AI**: Google Gemini 1.5 Flash
+- **Backend (Node.js)**: Express.js
+- **Backend (Python)**: FastAPI, Pydantic, Uvicorn
+- **AI**: Google Gemini 1.5 Flash & 2.0 Flash
 - **Geocoding**: Nominatim OpenStreetMap
 
 ### Key Dependencies
 
 - `@google/genai`: Integration with Gemini AI models.
 - `express`: Robust web server for the backend.
+- `fastapi`: High-performance Python backend framework.
 - `leaflet`: Interactive mapping library.
 - `lucide-react`: Beautiful, consistent iconography.
 - `motion`: Smooth animations and transitions.
@@ -40,6 +44,7 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
 ### Prerequisites
 
 - Node.js 18.x or higher
+- Python 3.9+ (for Python backend)
 - A Google Gemini API Key ([Get it here](https://ai.google.dev/))
 
 ### Installation
@@ -51,35 +56,44 @@ Map-Genie is a lightning-fast, AI-powered place explorer that transforms your vo
     cd map-genie
     ```
 
-2.  **Install dependencies**:
+2.  **Install Frontend & Node Backend dependencies**:
 
     ```bash
     npm install
     ```
 
-3.  **Configure environment variables**:
+3.  **Install Python Backend dependencies (Optional)**:
+
+    ```bash
+    cd backend_python
+    pip install -r requirements.txt
+    cd ..
+    ```
+
+4.  **Configure environment variables**:
     Create a `.env` file in the root directory and add your API key:
 
     ```env
     GEMINI_API_KEY=your_actual_key_here
     ```
 
-4.  **Start the development server**:
+5.  **Start the development server**:
 
     ```bash
     npm run dev
     ```
 
-5.  **Open in your browser**:
+6.  **Open in your browser**:
     Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### API Usage Example (Internal)
-Map-Genie communicates with the Gemini-powered backend using a simple JSON API:
+Map-Genie communicates with the Gemini-powered backend using a simple JSON API.
 
 ## 📂 Project Structure
 
 - `src/server/`: Express backend and AI proxy.
-- `src/components/`: Modular React components.
+- `backend_python/`: Alternative high-performance FastAPI backend.
+- `src/components/`: Modular React components (includes `WeatherWidget`, `ItineraryAnalytics`, etc.).
 - `src/utils/`: Helper functions and API wrappers.
 - `src/data/`: Static data and US state presets.
 - `tests/`: Backend and utility tests.
@@ -98,16 +112,22 @@ Click the microphone icon and speak your request. Map-Genie will transcribe your
 ### Planning an Itinerary
 1. Search for a location.
 2. Click the **"Add to Itinerary"** button on any place card.
-3. Open the **Planner Workspace** to reorder stops and view your daily schedule.
+3. Open the **Planner Workspace** to reorder stops and view your daily schedule and analytics.
 
 ---
 
 ## 🧪 Testing
 
-Run the test suite with:
+Run the Node.js test suite with:
 
 ```bash
 npm test
+```
+
+Run the Python backend tests:
+
+```bash
+python3 -m pytest backend_python/test_server.py
 ```
 
 ---
