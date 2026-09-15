@@ -2,116 +2,159 @@ name: Map-Genie CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, dev ]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
   schedule:
-    - cron: '0 2 * * 0'
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: map-genie-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  NODE_VERSION: 18
-  PYTHON_VERSION: '3.12'
-  REGISTRY: gcr.io
-  GCP_REGION: us-central1
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.12"
   IMAGE_NAME: map-genie
+  BUILD_ARTIFACT_NAME: map-genie-dist
 
 jobs:
   # ============================================================================
   # STAGE 1: LINT & BUILD
   # ============================================================================
   validate-and-build:
-    name: 'Lint, Validate, & Build Artifacts'
+    name: Lint, Validate, & Build Artifacts
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     outputs:
-      build-artifact-id: ${{ steps.build.outputs.artifact-id }}
-      git-sha: ${{ github.sha }}
-      branch-name: ${{ github.ref_name }}
+      git-sha: ${{ steps.metadata.outputs.git-sha }}
+      branch-name: ${{ steps.metadata.outputs.branch-name }}
+      artifact-name: ${{ steps.metadata.outputs.artifact-name }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Set workflow metadata
+        id: metadata
+        shell: bash
+        run: |
+          echo "git-sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "branch-name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "artifact-name=${BUILD_ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint checks
+        run: npm run lint
 
       - name: Audit npm dependencies
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript compiler check (Lint)
-        run: npm run lint
-
       - name: Build production bundles
-        id: build
-        run: |
-          npm run build
-          echo "artifact-id=$(date +%s)-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        run: npm run build
 
       - name: Verify build output
+        shell: bash
         run: |
-          if [ ! -f dist/index.html ] || [ ! -f dist/server.cjs ]; then
-            echo "❌ Build failed: Missing dist/index.html or dist/server.cjs"
+          set -euo pipefail
+
+          if [[ ! -d "dist" ]]; then
+            echo "::error::Build failed: dist directory was not created."
             exit 1
           fi
-          echo "✅ Build artifacts validated"
+
+          if [[ ! -f "dist/index.html" ]]; then
+            echo "::error::Build failed: dist/index.html is missing."
+            exit 1
+          fi
+
+          if [[ ! -f "dist/server.cjs" ]]; then
+            echo "::error::Build failed: dist/server.cjs is missing."
+            exit 1
+          fi
+
+          echo "Build artifacts validated successfully."
 
       - name: Upload build artifacts
+        id: upload-build
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ steps.build.outputs.artifact-id }}
+          name: ${{ env.BUILD_ARTIFACT_NAME }}
           path: dist/
+          if-no-files-found: error
           retention-days: 7
+          compression-level: 6
 
   # ============================================================================
   # STAGE 2: TESTS (NODE & PYTHON)
   # ============================================================================
   test:
-    name: 'Unit & Integration Tests'
+    name: Unit & Integration Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: validate-and-build
+
     strategy:
-      matrix:
-        node-version: [ 18, 20 ]
       fail-fast: false
+      matrix:
+        node-version:
+          - "18"
+          - "20"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend_python/requirements.txt
 
       - name: Install Node dependencies
         run: npm ci
 
       - name: Install Python dependencies
+        shell: bash
         run: |
-          pip install -r backend_python/requirements.txt
+          python -m pip install --upgrade pip
+          python -m pip install -r backend_python/requirements.txt
 
-      - name: Run Node.js Tests
+      - name: Run Node.js tests
         run: npm test
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
           NODE_ENV: test
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
 
-      - name: Run Python Tests
+      - name: Run Python tests
         run: python -m pytest backend_python/test_server.py
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
@@ -120,64 +163,135 @@ jobs:
   # STAGE 3: SECURITY SCANNING
   # ============================================================================
   security-scan:
-    name: 'Security & Dependency Scanning'
+    name: Security & Dependency Scanning
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Check for known vulnerabilities (npm audit)
-        run: npm audit --production
+      - name: Run npm production dependency audit
+        run: npm audit --omit=dev --audit-level=high
         continue-on-error: true
 
   # ============================================================================
   # STAGE 4: BUILD CONTAINER IMAGE
   # ============================================================================
   build-container:
-    name: 'Build Docker Image'
+    name: Build Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [ validate-and-build, test, security-scan ]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    needs:
+      - validate-and-build
+      - test
+      - security-scan
+
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Build Artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ needs.validate-and-build.outputs.build-artifact-id }}
-          path: dist/
+          name: ${{ needs.validate-and-build.outputs.artifact-name }}
+          path: dist
+
+      - name: Verify downloaded build artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/server.cjs
+          ls -la dist
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: false
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke-test Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker image inspect "${IMAGE_NAME}:${GITHUB_SHA}" >/dev/null
+          echo "Docker image built successfully: ${IMAGE_NAME}:${GITHUB_SHA}"
 
   # ============================================================================
   # STAGE 5: NOTIFICATIONS & REPORTING
   # ============================================================================
   notify:
-    name: 'Notifications'
+    name: CI/CD Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [ validate-and-build, test, security-scan, build-container ]
+
+    needs:
+      - validate-and-build
+      - test
+      - security-scan
+      - build-container
+
     steps:
-      - name: CI/CD Summary
+      - name: Write job summary
+        shell: bash
         run: |
-          echo "Pipeline run completed for commit ${{ github.sha }} on branch ${{ github.ref_name }}"
+          {
+            echo "## Map-Genie CI/CD Summary"
+            echo ""
+            echo "| Item | Value |"
+            echo "|---|---|"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Branch | \`${GITHUB_REF_NAME}\` |"
+            echo "| Event | \`${GITHUB_EVENT_NAME}\` |"
+            echo "| Validate & Build | \`${{ needs.validate-and-build.result }}\` |"
+            echo "| Tests | \`${{ needs.test.result }}\` |"
+            echo "| Security Scan | \`${{ needs.security-scan.result }}\` |"
+            echo "| Container Build | \`${{ needs.build-container.result }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail workflow when a required job failed
+        shell: bash
+        run: |
+          if [[ "${{ needs.validate-and-build.result }}" != "success" ]]; then
+            echo "::error::Validation and build job failed."
+            exit 1
+          fi
+
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "::error::Test job failed."
+            exit 1
+          fi
+
+          if [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+            echo "::error::Security scan job failed."
+            exit 1
+          fi
+
+          if [[ "${{ needs.build-container.result }}" == "failure" ]]; then
+            echo "::error::Container build job failed."
+            exit 1
+          fi
+
+          echo "Pipeline completed successfully."
