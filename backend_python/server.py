@@ -23,7 +23,7 @@ import json
 import logging
 import time
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from collections import defaultdict
 from threading import Lock
@@ -248,7 +248,7 @@ class ErrorDetail(BaseModel):
     error_code: str
     detail: str
     request_id: Optional[str] = None
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ============================================================================
@@ -438,7 +438,7 @@ async def health_check(request: Request):
 
     response_body = {
         "status": "healthy" if gemini_status == "operational" else "degraded",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "gemini_api": gemini_status,
         "version": "1.1.1",
         "request_id": request_id
@@ -659,7 +659,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "error": error_code,
             "detail": exc.detail,
             "request_id": request_id,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 

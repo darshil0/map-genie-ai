@@ -2,6 +2,20 @@
 
 All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [Unreleased]
+
+### Added
+- Production `Dockerfile` for containerized application deployments.
+- CI/CD step running Python unit test suite with `pytest`.
+
+### Fixed
+- CI/CD workflow in `.github/workflows/ci-cd.yml` to check for `dist/server.cjs` and handle API secrets properly.
+- Deprecated `datetime.utcnow()` calls replaced with `datetime.now(timezone.utc)` in Python backend.
+
+### Changed
+- Moved `legacy-prototype.html` to `docs/archive/legacy-prototype.html` to clean root project structure.
+- Removed empty `.aistudio` assets folder.
+
 ## [1.8.1] - 2026-06-17
 
 ### Fixed
