@@ -10,7 +10,7 @@ Run specific test:
 
 import pytest
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch, MagicMock
 from httpx import AsyncClient, ASGITransport
 
@@ -53,7 +53,7 @@ def valid_chat_message():
         id="msg_001",
         sender="user",
         text="Find cozy coffee shops",
-        timestamp=datetime.utcnow().isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat()
     )
 
 
@@ -217,7 +217,7 @@ async def test_chat_history_exceeds_limit(client):
             "id": f"msg_{i}",
             "sender": "user",
             "text": f"Message {i}",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         for i in range(MAX_HISTORY_MESSAGES + 5)
     ]
