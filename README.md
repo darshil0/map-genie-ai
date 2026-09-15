@@ -127,7 +127,7 @@ npm test
 Run the Python backend tests:
 
 ```bash
-python3 -m pytest backend_python/test_server.py
+GEMINI_API_KEY=test_key python3 -m pytest backend_python/test_server.py
 ```
 
 ---
