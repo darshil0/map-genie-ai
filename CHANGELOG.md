@@ -2,7 +2,7 @@
 
 All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
 
-## [Unreleased]
+## ## [1.8.2] - 2026-09-14
 
 ### Added
 - Production `Dockerfile` for containerized application deployments.
