@@ -2,6 +2,16 @@
 
 All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [1.8.1] - 2026-06-17
+
+### Fixed
+
+- **Python Backend Security & Compatibility**: Fixed `TrustedHostMiddleware` allowed hosts configuration to properly extract plain hostnames from origins (such as 'test' during pytest runs or HTTP origins with port numbers).
+- **Dependency Resolution**: Relaxed overly strict version pins in `backend_python/requirements.txt` to avoid package resolution errors.
+- **Repository Cleanup**: Removed redundant duplicate `backend_python/mapgenie_fastapi.py` file.
+
+---
+
 ## [1.8.0] - 2026-06-16
 
 ### Added

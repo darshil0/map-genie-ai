@@ -286,8 +286,24 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Parse and clean hostnames for TrustedHostMiddleware
+from urllib.parse import urlparse
+
+allowed_hosts = {"localhost", "127.0.0.1", "test"}
+for origin in ALLOWED_ORIGINS:
+    cleaned = origin.strip()
+    if cleaned:
+        if "://" in cleaned:
+            parsed = urlparse(cleaned)
+            if parsed.hostname:
+                allowed_hosts.add(parsed.hostname)
+        else:
+            host_part = cleaned.split(":")[0]
+            if host_part:
+                allowed_hosts.add(host_part)
+
 # Add security middleware
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"] + ALLOWED_ORIGINS)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(allowed_hosts))
 
 # Add CORS middleware (restricted origins)
 app.add_middleware(
