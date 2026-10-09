@@ -1,82 +1,87 @@
 # 📜 Changelog
 
-All notable changes to **Map-Genie** are documented below. This project adheres to [Semantic Versioning](https://semver.org/) and uses the [Keep a Changelog](https://keepachangelog.com/) format.
+All notable changes to Map-Genie are documented below. This project follows the [Keep a Changelog](https://keepachangelog.com/) format and uses semantic versioning where applicable.
+
+## [Unreleased]
+
+### Fixed
+- Hardened the Nominatim geocoder to gracefully handle empty input, failed fetches, malformed JSON, and invalid coordinate values.
+- Improved backend request validation to reject malformed chat payloads before Gemini calls are attempted.
+- Prevented server startup from crashing when `GEMINI_API_KEY` is missing during local development or test runs.
+- Added the missing React TypeScript packages required for the project to compile cleanly.
+
+### Documentation
+- Refreshed `README.md` to match the current Node/Express + React app structure and local setup workflow.
+
+---
 
 ## [1.8.2] - 2026-09-14
 
 ### Added
-- Production `Dockerfile` for containerized application deployments.
-- CI/CD step running Python unit test suite with `pytest`.
+- Production `Dockerfile` for containerized deployments.
+- CI/CD step for the Python unit test suite with `pytest`.
 
 ### Fixed
-- CI/CD workflow in `.github/workflows/ci-cd.yml` to check for `dist/server.cjs` and handle API secrets properly.
-- Deprecated `datetime.utcnow()` calls replaced with `datetime.now(timezone.utc)` in Python backend.
+- Updated the GitHub Actions workflow to validate `dist/server.cjs` and handle API secrets more safely.
+- Replaced deprecated `datetime.utcnow()` usage with `datetime.now(timezone.utc)` in the Python backend.
 
 ### Changed
-- Moved `legacy-prototype.html` to `docs/archive/legacy-prototype.html` to clean root project structure.
-- Removed empty `.aistudio` assets folder.
+- Cleaned up the project structure by moving `legacy-prototype.html` to `docs/archive/legacy-prototype.html`.
+- Removed the empty `.aistudio` assets folder.
+
+---
 
 ## [1.8.1] - 2026-06-17
 
 ### Fixed
-
-- **Python Backend Security & Compatibility**: Fixed `TrustedHostMiddleware` allowed hosts configuration to properly extract plain hostnames from origins (such as 'test' during pytest runs or HTTP origins with port numbers).
-- **Dependency Resolution**: Relaxed overly strict version pins in `backend_python/requirements.txt` to avoid package resolution errors.
-- **Repository Cleanup**: Removed redundant duplicate `backend_python/mapgenie_fastapi.py` file.
+- Fixed TrustedHostMiddleware allowed-host configuration in the Python backend for test and HTTP origin scenarios.
+- Relaxed overly strict dependency pins in `backend_python/requirements.txt`.
+- Removed the redundant duplicate `backend_python/mapgenie_fastapi.py` file.
 
 ---
 
 ## [1.8.0] - 2026-06-16
 
 ### Added
-
-- **Python Backend Microservice**: Introduced a high-performance FastAPI-based backend in `backend_python/` using Pydantic for validation and Uvicorn for serving.
-- **Real-time Weather Integration**: Added `WeatherWidget.tsx` component to provide live weather updates for locations using the Open-Meteo API.
-- **Spatial Analytics Dashboard**: Added `ItineraryAnalytics.tsx` to provide users with data-driven insights into their planned itineraries.
+- Introduced the FastAPI-based Python backend in `backend_python/`.
+- Added the weather widget for live Open-Meteo forecasts.
+- Added itinerary analytics for trip insights and category distribution.
 
 ### Documentation
-
-- Updated `README.md` to include Python backend setup and new frontend features.
-- Expanded `CHANGELOG.md` with version 1.8.0.
+- Updated `README.md` with the Python backend setup and frontend feature list.
+- Expanded `CHANGELOG.md` for the 1.8.0 release.
 
 ---
 
 ## [1.7.0] - 2026-06-15
 
 ### Features
-
-- **Major Codebase Refactoring**: Extracted large JSX blocks from `App.tsx` into modular components:
+- Refactored large JSX blocks into modular components:
   - `ControlPanel.tsx`
   - `MapPanel.tsx`
   - `AssistantPanel.tsx`
   - `PlaceForm.tsx`
   - `MobileNav.tsx`
-- **Project Structure Reorganization**:
-  - Moved backend server to `src/server/`.
-  - Moved tests to a dedicated root `tests/` directory.
+- Reorganized the codebase by moving backend logic to `src/server/` and tests to `tests/`.
 
 ### Documentation
-
-- Completely updated `README.md` with modern formatting, clear installation steps, and project structure overview.
-- Updated `CHANGELOG.md` to reflect recent major structural changes.
+- Updated `README.md` with clearer installation instructions and project structure.
+- Refreshed `CHANGELOG.md` for the refactor.
 
 ### Refactoring
-
-- Improved project maintainability by decoupling UI components.
-- Updated `package.json` scripts to align with the new project structure.
+- Improved maintainability by decoupling UI logic into dedicated components.
+- Updated `package.json` scripts to match the new structure.
 
 ---
 
 ## [1.6.0] - 2026-04-15
 
 ### Added
-
-- **High-Contrast Paper Accent Theme**: Introduced CSS Custom Property system for accessible, themeable design.
-- **Typography System Overhaul**: Updated font stacks for improved readability.
+- Introduced the high-contrast paper accent theme and CSS custom property system.
+- Overhauled the typography system for readability.
 
 ### Fixed
-
-- Fixed JSX compilation failures in `SearchBar.tsx` and `MapContainer.tsx`.
+- Fixed JSX compilation issues in `SearchBar.tsx` and `MapContainer.tsx`.
 - Restored clean production builds.
 
 ---
@@ -84,15 +89,13 @@ All notable changes to **Map-Genie** are documented below. This project adheres 
 ## [1.5.0] - 2026-03-10
 
 ### Added
-
-- **Adaptive Mobile Sidebar**: Dynamic height transitions for mobile viewports.
-- **Glassmorphic Overlay Curation Form**: Improved form accessibility on mobile.
+- Added the adaptive mobile sidebar.
+- Added the glassmorphic overlay form for custom itinerary editing.
 
 ---
 
 ## [1.1.0] - 2026-01-15
 
 ### Added
-
-- Initial Release with Gemini Chat & Speech Input.
-- Leaflet Map integration with Nominatim geocoding.
+- Initial release with Gemini chat support and speech input.
+- Added Leaflet map integration with Nominatim geocoding.
