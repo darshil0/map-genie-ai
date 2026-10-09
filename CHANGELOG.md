@@ -6,12 +6,14 @@ All notable changes to Map-Genie are documented below. This project follows the 
 
 ### Added
 - Updated the project dependency set to current stable package versions for the app, Vite toolchain, and TypeScript support.
+- Improved CI/CD pipeline robustness with lockfile validation, conditional Python testing, and stronger artifact checks.
 
 ### Fixed
 - Hardened the Nominatim geocoder to gracefully handle empty input, failed fetches, malformed JSON, and invalid coordinate values.
 - Improved backend request validation to reject malformed chat payloads before Gemini calls are attempted.
 - Prevented server startup from crashing when `GEMINI_API_KEY` is missing during local development or test runs.
 - Added the missing React TypeScript packages required for the project to compile cleanly.
+- Fixed CI/CD pipeline issues caused by optional backend files, validation gaps, and brittle artifact checks.
 
 ### Documentation
 - Refreshed `README.md` to match the current Node/Express + React app structure and local setup workflow.
