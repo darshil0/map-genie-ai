@@ -4,6 +4,9 @@ All notable changes to Map-Genie are documented below. This project follows the 
 
 ## [Unreleased]
 
+### Added
+- Updated the project dependency set to current stable package versions for the app, Vite toolchain, and TypeScript support.
+
 ### Fixed
 - Hardened the Nominatim geocoder to gracefully handle empty input, failed fetches, malformed JSON, and invalid coordinate values.
 - Improved backend request validation to reject malformed chat payloads before Gemini calls are attempted.
